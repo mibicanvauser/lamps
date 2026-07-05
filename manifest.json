@@ -1,0 +1,22 @@
+{
+"short_name": "Controller App",
+"name": "Lamp Controller",
+"icons": [
+{
+"src": "https://cdn.jsdelivr.net/npm/@jaames/iro@5/assets/marker.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+},
+{
+"src": "https://cdn.jsdelivr.net/npm/@jaames/iro@5/assets/marker.png",
+      "type": "image/png",
+      "sizes": "512x512"
+}
+],
+"start_url": "index.html",
+"display": "standalone",
+"background_color": "#0b0b0c",
+"theme_color": "#1c1c1e",
+"orientation": "portrait"
+}
