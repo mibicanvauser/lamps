@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang= "en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, intital-scale=1.0, maximum-scale=1.0, user-scalable=no">
+	<title>Lamp Controller</title>
+	<link rel="manifest" href="manifest.json">
+	<script src="https://cdn.jsdelivr.net/npm/@jaames/iro@5"></script>
+
+<style>
+/*reset everything*/
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+	user-select: none;
+}
+
+/*font styling*/
+
+body {
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+	background-color: #0b0b0c;
+	color: #f5f5f7;
+	display: flex;
+	justify-content: center;
+	padding: 20px 15px;
+}
+
+/*app container*/
+
+.app-container {
+	width: 100%;
+	max-width: 360px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	padding: 10px;
+	}
+
+
+/*create panel cards (buttons) for each color preset/mode*/
+
+.panel-card {
+	background: #1c1c1e;
+	border-radius: 14px;
+	padding: 16px;
+	display: flex;
+	flex-direction: column;
+	gap: 15px;
+	width: 100%;
+	transition: box-shadow 0.5s ease, background-color 0.2s;
+	box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4), 
+	0 0 20px -1px var(--accent-glow, rgba(44, 44, 46, 0.2));
+	}
+h3 {
+	font-size: 0.85rem;
+	color: #8e8e93;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	margin-bottom: 5px;
+}
+
+/*styling for controls inside the card*/
+.control row {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-size: 1.1rem;
+}
+
+input[type="range"] {
+	width: 100%;
+	accent-color: #0a84ff;
+	background: #3a3a3c;
+	height: 6px;
+	border-radius: 3px;
+	appearance: none;
+	margin-top: 5px;
+}
+	
+
+/*styling for button grid*/
+.button-grid {
+	display: grid;
+	grid-template-columns: repeat(3,1fr);
+	gap: 10px;
+	width: 100%;
+}
+	
+.mode-macro {
+	grid-column: span 3;
+	background: #2c2c2e;
+	color: #fff;
+	border: 1px solid #3a3a3c;
+	padding: 14px 5px;
+	border-radius: 10px;
+	font-weight: 600;
+	font-size: 0.95rem;
+	cursor: pointer;
+	text-align: center;
+	width: 100%;
+	transition: background-color 0.3s ease, color 0.3s ease;
+	}
+
+.color-macro {
+	border: none;
+	padding: 14px 5px;
+	border-radius: 10px;
+	font-weight: 600;
+	cursor: pointer;
+	text-align: center;
+	width: 100%;
+	transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.toggle-slider {
+	background-color: #3a3a3c;
+	transition: 0.25s;
+	border-radius: 34px;
+}
+
+input:checked + .toggle-slider {
+	background-color: #34c759;
+}
+
+input:checked + .toggle-slider:before {
+	transform: translateX(20px);
+}
+
+
+#picker-container {
+	display: flex;
+	justify-content: center;
+	margin-top: 10px;
+}
+
+/* Power button styles*/
+#power-btn {
+	width: 100%;
+	border: none;
+	padding: 14px 0;
+	border-radius: 10px;
+	font-weight: bold;
+	font-size: 1rem;
+	cursor: pointer;
+	transition: background-color 0.2s, color 0.2s;
+	}
+
+/*Active state*/
+.power-on-style {
+	background-color: #34c759;
+    color: #fff;
+}
+
+/*Off state*/
+.power-off-style {
+	background-color: #ff453a;
+    color: #fff;
+}
+
+
+	
+</style>
+</head>
+
+
+
+<body>
+	<div class ="app-container">
+		<div id="controls-wrapper" style="display:none; flex-direction: column; gap: 15px; width: 100%;">
+		<section class="panel-card">
+		<div style="display: flex; justify-content: space-between; align-items: center;">
+	<h3>System Control</h3>
+	<button id ="gear-btn" style="background: none; border: none; color: #8e8e93; font-size: 1.2rem; cursor: pointer;">⚙️</button>
+	</div>
+	<div class ="control-row">
+	<span>Power</span>
+	
+
+<button id="power-btn" class="power-off-style">OFF</button>
+
+
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px;">
+	<label for="brightness-slider">Brightness: <span id="brightness-pct">100%</span></label>
+<input type="range" id="brightness-slider" min="3" max="255" value="100">
+</div>
+</section>
+
+<!Buttons for color presets>
+
+<section class="panel-card"> <h3>Preset Colors and Modes</h3>
+<div class="button-grid">
+<button class="color-macro" data-hex="#FF0000" style="background: #FF0000;">Red</button>
+<button class="color-macro" data-hex="#F4A000" style="background: #F4A000;">Orange</button>
+<button class="color-macro" data-hex="#EEFF00" style="background: #EEFF00;">Yellow</button>
+<button class="color-macro" data-hex="#00FF00" style="background: #00FF00;">Green</button>
+<button class="color-macro" data-hex="#0095FF" style="background: #0095FF;">Blue</button>
+<button class="color-macro" data-hex="#2A00FF" style="background: #2A00FF;">Indigo</button>
+<button class="color-macro" data-hex="#00FF8C" style="background: #00FF8C;">Aquamarine</button>
+<button class="color-macro" data-hex="#FF007F" style="background: #FF007F;">Pink</button>
+<button class="color-macro" data-hex="#FFFFFF" style="background: #FFFFFF;">White</button>
+
+<!Buttons for lighting modes (sends a text string)>
+<button class="mode-macro" id="breathe">peak</button>
+<button class="mode-macro" id="rainbow">Rainbow Gradient</button>
+
+
+</div>
+</section>
+
+<section class="panel-card">
+	<h3>Custom Color</h3>
+<!Container for iro.js color wheel (script drops it in here)>
+	<div id="picker-container"></div>
+</section>
+
+</div><section id="settings-card" class="panel-card" style="display: flex;">
+	<h3>Communication Protocol Setup</h3>
+<p style="font-size: 0.85rem; color: #8e8e93; margin-top: -5px; line-height: 1.3;">
+	THIS IS NOT A VIRUS TRUST 
+</p>
+<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 5px;">
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<label style ="font-size: 0.9rem; color: #fff;">Username</label>
+<input type="text" id="setup-username" placeholder="e.g. bradenertel" style="width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; padding: 10px; color: #fff; font-size: 1rem; outline: none;">
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 4px;">
+<label style ="font-size: 0.9rem; color: #fff;">Key</label>
+<input type="password" id="setup-key" placeholder="Paste active key" style="width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; padding: 10px; color: #fff; font-size: 1rem; outline: none;">
+</div>
+<button id="save-settings-btn" style="width: 100%; border: none; background: #0a84ff; color: #fff; padding: 12px 0; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 5px; transition: background 0.2s;">Save & Connect</button>
+</div>
+</section>
+</div><script src="app.js"></script>
+</body>
+</html>
+
+
+
+
