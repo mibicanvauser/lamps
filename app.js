@@ -35,7 +35,14 @@ const brightnessPct = document.getElementById('brightness-pct');
 
 const colorPicker = new iro.ColorPicker("#picker-container", {
 	width: 240,
-	layout: [{ component: iro.ui.Wheel}]
+	layout: [
+		{
+		 component: iro.ui.Wheel,
+		options: {
+		handleRadius: 8
+}
+}
+]
 });
 
 
