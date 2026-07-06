@@ -6,11 +6,22 @@ const ASSETS_TO_CACHE = [
 'https://cdn.jsdelivr.net/npm/@jaames/iro@5'
 ];
 
+self.addEventListener('install', (event) => {
+	event.waitUntil(
+	caches.open(CACHE_NAME).then((cache) => {
+	console.log('[Service Worker] Caching layout assets');
+	return cache.addAll(ASSETS_TO_CACHE);
+	}).then(() => self.skipWaiting())
+	);
+	});
+
+
+
 self.addEventListener('activate', (event) => {
 event.waitUntil(
-caches.keys().then(keys) => {
+caches.keys().then((keys) => {
 return Promise.all(
-keys.map(key) => {
+keys.map((key) => {
 if(key !==CACHE_NAME) {
 	console.log('[Service Worker] FLushing old cache core:', key);
 	return caches.delete(key);
