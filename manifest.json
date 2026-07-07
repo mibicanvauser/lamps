@@ -3,13 +3,13 @@
 "name": "Lamp Controller",
 "icons": [
 {
-"src": "https://cdn.jsdelivr.net/npm/@jaames/iro@5/assets/marker.png",
+"src": "icon-192.png.png",
       "type": "image/png",
       "sizes": "192x192",
       "purpose": "any maskable"
 },
 {
-"src": "https://cdn.jsdelivr.net/npm/@jaames/iro@5/assets/marker.png",
+"src": "icon-512.png.png",
       "type": "image/png",
       "sizes": "512x512"
 }
