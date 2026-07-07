@@ -189,18 +189,20 @@ fetch(colorUrl, {
 	ambientGlow(data.value);
 	
 
-	}else if (data.value.startsWith('#')){
+	} else if (data.value.startsWith('#')){
 	currentActiveMode='';
 	lastSelectedHex= data.value;
-	colorPicker.color.hexString = data.value;
-	ambientGlow(data.value);
-	}else{
-	ambientGlow(data.value);
+	
+	if(colorPicker) {
+		colorPicker.color.hexString = data.value;
 	}
+ambientGlow(data.value);
+}
 }
 })
 .catch(error => console.error("[Sync Error]:", error))
 }
+
 
 
 
@@ -466,3 +468,6 @@ sendToLamp("lamp-reset", "REBOOT");
 
 	} 
 });
+
+
+
