@@ -454,4 +454,15 @@ document.body.appendChild(ripple);
 setTimeout(() => {
 	ripple.remove();
 	}, 450);
+
+});
+
+document.getElementById('resetESPBtn').addEventListener('click', () => {
+
+if(confirm("Reboot lamp (whoops!)")) {
+	console.log("[System] Rebooting...");
+
+sendToLamp("lamp-reset", "REBOOT"); 
+
+	} 
 });
