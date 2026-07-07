@@ -62,6 +62,9 @@ return;
 
 requestAnimationFrame(() => {
 
+const currentRawBrightness= parseInt(brightnessSlider.value, 10) || 0;
+const dynamicOpacity = (currentRawBrightness/ 255).toFixed(2);
+
 if(hexColor && hexColor.startsWith('#')){
 let fullHex= hexColor;
 if(hexColor.length === 4){
@@ -71,7 +74,8 @@ const r = parseInt(fullHex.slice(1, 3), 16);
 const g = parseInt(fullHex.slice(3, 5), 16);
 const b = parseInt(fullHex.slice(5, 7), 16);
 
-document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, 0.80)`);
+document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`);
+
 
 }else if(hexColor=== '#BREATHE'){
 document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 255, 255, 0.5)');
@@ -232,6 +236,11 @@ ambientGlow('rgba(0,0,0,0)');
 //brightness slider
 brightnessSlider.addEventListener('input', () => {
 updateBrightnessLabel(brightnessSlider.value);
+if(currentActiveMode !==''){
+	ambientGlow(currentActiveMode);
+}else{
+	ambientGlow(colorPicker.color.hexString);
+}
 });
 
 
