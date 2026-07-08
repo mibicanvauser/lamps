@@ -450,6 +450,10 @@ checkCredentials();
 
 window.addEventListener('pointerdown', (event) => {
 
+if (navigator.vibrate) {
+	navigator.virbrate(15);
+}
+
 const ripple= document.createElement('div');
 ripple.classList.add('touch-ripple');
 
