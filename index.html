@@ -331,6 +331,32 @@ Reset System
 	<h3>Custom Color</h3>
 <!Container for iro.js color wheel (script drops it in here)>
 	<div id="picker-container"></div>
+
+<!Container for timer>
+
+<div id="timer-container" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; margin: 20px 0; padding: 14px 0; border-top: 1px solid rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.08); width: 100%;">
+
+<div style="display: flex; gap: 8px; width: 100%; justify-content: space-between; align-items: center; flex-wrap: nowrap;">
+
+<span style="font-size: 14px; color: #8e8e93; font-weight: 500;">Timer:</span>
+
+<div class="timer-segment" data-value="15" style="display: flex; align-items: center; justify-content: center; background: #2c2c2e; color: #ffffff; height: 38px; width: 44px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;">15</div>
+
+<div class="timer-segment" data-value="30" style="display: flex; align-items: center; justify-content: center; background: #2c2c2e; color: #ffffff; height: 38px; width: 44px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;">30</div>
+
+<div class="timer-segment" data-value="45" style="display: flex; align-items: center; justify-content: center; background: #2c2c2e; color: #ffffff; height: 38px; width: 44px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;">45</div>
+
+<div class="timer-segment" data-value="60" style="display: flex; align-items: center; justify-content: center; background: #2c2c2e; color: #ffffff; height: 38px; width: 44px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;">1h</div>
+
+
+<button id="timer-toggle-btn" style="display: flex; align-items: center; justify-content: center; background: #ffffff; color: #000000; border: none; height: 38px; padding: 0 14px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; transition: all 0.2s ease;">Start</button>
+
+</div>
+<div style="width: 100%; display: flex; justify-content: center; min-height: 20px; margin-top: 12px;">
+<span id="timer-countdown-display" style="font-size: 13px; color: #ff9500; font-family: monospace; font-weight: bold; display: none; margin-left: 4px;">--:--</span>
+</div>
+</div>
+
 </section>
 
 </div><section id="settings-card" class="panel-card" style="display: flex;">
