@@ -15,8 +15,9 @@ if('serviceWorker' in navigator) {
 let AIO_USERNAME = localStorage.getItem('LAMP_AIO_USERNAME') || '';
 let AIO_KEY = localStorage.getItem('LAMP_AIO_KEY') || '';
 
-const COLOR_FEED = "lamp-color"
-const BRIGHTNESS_FEED = "lamp-brightness"
+const COLOR_FEED = "lamp-color";
+const BRIGHTNESS_FEED = "lamp-brightness";
+const TIMER_FEED = "lamp-timer";
 
 const controlsWrapper= document.getElementById('controls-wrapper');
 const settingsCard= document.getElementById('settings-card');
@@ -207,12 +208,50 @@ ambientGlow(data.value);
 .catch(error => console.error("[Sync Error]:", error))
 }
 
+const timerUrl= `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${TIMER_FEED}/data/last`;
+
+fetch(timerUrl, {
+	method: "GET",
+	headers: {"X-AIO-Key": AIO_KEY}
+})
+.then(response => {
+	if(!response.ok) throw new Error("Could not pull last timer data");
+	return response.json();
+	
+})
+
+.then(data => {
+	if(data.value && data.value !=="0") {
+	const cloudTarget = parseInt(data.value, 10);
+	const currentEpoch= Math.floor(Date.now() / 1000);
+	
+	if(cloudTarget > currentEpoch) {
+	console.log(`[Sync] Active cloud timer discovered! Syncing countdown...`);
+	startLocalCountdown(cloudTarget);
+	
+}else{
+	clearLocalCountdown();
+}
 
 
-
+}else{
+	clearLocalCountdown();
+}
+})
+.catch(error => console.error("[Timer Sync Error]:", error));
+	
+	
+	
 //Event listeners for all buttons
 powerBtn.addEventListener('click', () => {
 isPowerOn = !isPowerOn
+
+if(sleepTimerInterval) {
+	sendToLamp(TIMER_FEED, 0);
+	clearLocalCountdown();
+}
+
+
 if(isPowerOn){
 powerBtn.textContent = "OFF";
 powerBtn.style.backgroundColor= "#ffffff";
@@ -448,10 +487,134 @@ if(gearBtn){
 
 checkCredentials();
 
+//timer logic
+
+let sleepTimerInterval= null;
+let selectedDurationMinutes = 15;
+let targetEpochSeconds = 0;
+
+
+const timerToggleBtn = document.getElementById('timer-toggle-btn');
+const timerCountdownDisplay = document.getElementById('timer-countdown-display');
+
+
+document.querySelectorAll('.timer-segment').forEach(pill => {
+	pill.addEventListener('click', () => {
+	if(sleepTimerInterval) return;
+
+	document.querySelectorAll('.timer-segment').forEach(p => {
+		p.style.background = "#2c2c2e";
+			p.style.color = "#ffffff";
+		});
+
+	pill.style.background = "#ffffff";
+	pill.style.color= "#000000";
+
+	selectedDurationMinutes = parseInt(pill.getAttribute('data-value'), 10) || 15;
+	console.log(`[UI] Timer duration target updated to: ${selectedDurationMinutes}m`);
+});
+});
+
+
+
+function tickSynchronizedTimer() {
+	const currentEpochSeconds= Math.floor(Date.now() / 1000);
+	const secondsRemaining = targetEpochSeconds-currentEpochSeconds;
+
+	if(secondsRemaining <= 0){
+	handleTimerComplete();
+	return;
+}
+	const mins = Math.floor(secondsRemaining/60);
+	const secs= secondsRemaining % 60;
+	timerCountdownDisplay.textContent = `Shutdown in: ${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+}
+	
+function startLocalCountdown(targetTimestamp) {
+targetEpochSeconds= parseInt(targetTimestamp, 10);
+
+if(sleepTimerInterval) clearInterval(sleepTimerInterval);
+	
+	timerToggleBtn.textContent = "STOP";
+	timerToggleBtn.style.backgroundColor = "#ff3b30";
+	timerToggleBtn.style.color = "#ffffff";
+	timerCountdownDisplay.style.display = "block";
+	
+
+	tickSynchronizedTimer();
+	sleepTimerInterval = setInterval(tickSynchronizedTimer, 1000);
+}
+
+	function clearLocalCountdown() {
+		if(sleepTimerInterval) {
+			clearInterval(sleepTimerInterval);
+			sleepTimerInterval = null;
+}
+		targetEpochSeconds = 0;
+		
+	timerToggleBtn.textContent= "START";
+	timerToggleBtn.style.backgroundColor= "#ffffff";
+	timerToggleBtn.style.color= "#000000";
+	timerCountdownDisplay.style.display= "none";
+	
+	document.querySelectorAll('.timer-segment').forEach((p, idx) => {
+		p.style.background = idx ===0? "#ffffff" : "#2c2c2e";
+		p.style.color = idx ===0? "#000000" : "#ffffff";
+});
+selectedDurationMinutes= 15;
+
+}
+
+		
+
+
+function handleTimerComplete() {
+	console.log("[Timer] Synced countdown at zero. Shutting down...");
+	clearLocalCountdown();
+	
+	isPowerOn= false;
+	if(powerBtn) {
+		powerBtn.textContent= "ON";
+		powerBtn.style.backgroundColor = "#000000";
+		powerBtn.style.color = "#ffffff";
+}
+	ambientGlow('rgba(0, 0, 0, 0)');
+	
+	if(targetEpochSeconds > 0) {
+		sendToLamp(BRIGHTNESS_FEED, 0);
+}
+}
+
+	if (timerToggleBtn) {
+	timerToggleBtn.addEventListener('click', () => {
+	if(!isPowerOn) {
+		alert("please turn on the lamp before setting a timer thank you i appreciate you");
+		return;
+}
+
+	if(sleepTimerInterval) {
+		console.log("[Timer] Cancelling timer sequence...");
+		sendToLamp(TIMER_FEED, 0);
+		clearLocalCountdown();
+		return;
+}
+
+
+	const currentEpochSeconds = Math.floor(Date.now()/ 1000);
+	const runtimeSeconds= selectedDurationMinutes * 60;
+	const finalTargetTime = currentEpochSeconds+runtimeSeconds;
+
+	console.log(`[Timer] Publishing target timestamp ${finalTargetTime} to feed...`);
+	sendToLamp(TIMER_FEED, finalTargetTime);
+	startLocalCountdown(finalTargetTime);
+});
+}
+
+
 window.addEventListener('pointerdown', (event) => {
 
 if (navigator.vibrate) {
-	navigator.virbrate(15);
+	navigator.vibrate(15);
 }
 
 const ripple= document.createElement('div');
@@ -474,7 +637,7 @@ setTimeout(() => {
 
 document.getElementById('resetESPBtn').addEventListener('click', () => {
 
-if(confirm("Reboot lamp (whoops!)")) {
+if(confirm("Reboot lamp (we did not do it joe)")) {
 	console.log("[System] Rebooting...");
 
 sendToLamp("lamp-reset", "REBOOT"); 
