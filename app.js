@@ -570,6 +570,11 @@ selectedDurationMinutes= 15;
 
 function handleTimerComplete() {
 	console.log("[Timer] Synced countdown at zero. Shutting down...");
+
+	if(targetEpochSeconds > 0) {
+		sendToLamp(BRIGHTNESS_FEED, 0);
+}
+
 	clearLocalCountdown();
 	
 	isPowerOn= false;
@@ -580,10 +585,7 @@ function handleTimerComplete() {
 }
 	ambientGlow('rgba(0, 0, 0, 0)');
 	
-	if(targetEpochSeconds > 0) {
-		sendToLamp(BRIGHTNESS_FEED, 0);
-}
-}
+	}
 
 	if (timerToggleBtn) {
 	timerToggleBtn.addEventListener('click', () => {
@@ -644,7 +646,6 @@ sendToLamp("lamp-reset", "REBOOT");
 
 	} 
 });
-
 
 
 
