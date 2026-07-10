@@ -68,7 +68,14 @@ requestAnimationFrame(() => {
 const currentRawBrightness= parseInt(brightnessSlider.value, 10) || 0;
 const dynamicOpacity = (currentRawBrightness/ 255).toFixed(2);
 
-if(hexColor && hexColor.startsWith('#')){
+if(!hexColor) return;
+
+if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
+	document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 127, 0.5)');
+}else if(hexColor==='#RAINBOW' || hexColor==='RAINBOW') {
+	document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 255, 0, 0.5)');
+
+}else if(hexColor && hexColor.startsWith('#')){
 let fullHex= hexColor;
 if(hexColor.length === 4){
 fullHex = "#" + hexColor[1] + hexColor[1] + hexColor[2] + hexColor[2] + hexColor[3] + hexColor[3];
@@ -78,16 +85,9 @@ const g = parseInt(fullHex.slice(3, 5), 16);
 const b = parseInt(fullHex.slice(5, 7), 16);
 
 document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`);
-
-
-}else if(hexColor=== '#BREATHE'){
-document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 255, 255, 0.5)');
-}else if(hexColor=== '#RAINBOW'){
-document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 255, 255, 0.5)');
-	}
+		}
 	});
 }
-
 
 
 //Send messages to lamp
@@ -712,6 +712,7 @@ if(numericBrightness === 0){
 if(feedKey === COLOR_FEED) {
 	if(payload === '#BREATHE'){
 		currentActiveMode='BREATHE';
+		resetModes();
 		if(breatheBtn) {
 			breatheBtn.style.backgroundColor = "#ffffff";
 			breatheBtn.style.color = "#000000";
@@ -719,15 +720,16 @@ if(feedKey === COLOR_FEED) {
 		}
 		resetModes();
 		if(breatheBtn) breatheBtn.style.backgroundColor = "#ffffff";
+				breatheBtn.style.color= "#000000";
 		ambientGlow(payload);
 
 }else if(payload === '#RAINBOW') {
 	currentActiveMode='RAINBOW';
+	resetModes();
 	if(rainbowBtn) {
 		rainbowBtn.style.backgroundColor = "#ffffff";
 		rainbowBtn.style.color= "#000000";
 		}
-	resetModes();
 	if(rainbowBtn) rainbowBtn.style.backgroundColor = "#ffffff";
 	ambientGlow(payload);
 
