@@ -19,6 +19,8 @@ const COLOR_FEED = "lamp-color";
 const BRIGHTNESS_FEED = "lamp-brightness";
 const TIMER_FEED = "lamp-timer";
 
+let mqttClient = null;
+
 const controlsWrapper= document.getElementById('controls-wrapper');
 const settingsCard= document.getElementById('settings-card');
 
@@ -422,12 +424,15 @@ void controlsWrapper.offsetWidth;
 controlsWrapper.classList.remove('fade-init');
 
 syncWithCloud();
+initMQTT();
 }, 400);
 
 }else{
 settingsCard.style.display= 'none';
 controlsWrapper.style.display= 'flex';
+
 syncWithCloud();
+initMQTT();
 }
 
 }else{
@@ -646,6 +651,118 @@ sendToLamp("lamp-reset", "REBOOT");
 
 	} 
 });
+
+function initMQTT() {
+if(mqttClient && mqttClient.connected) return;
+
+console.log("[MQTT] Connecting webSocket...");
+
+const brokerUrl = `wss://io.adafruit.com:443/mqtt`;
+const options = {
+	username: AIO_USERNAME,
+	password: AIO_KEY,
+	clientId: 'lamp_ui_'+Math.random().toString(16).substr(2,8)
+};
+
+mqttClient = mqtt.connect(brokerUrl, options);
+
+mqttClient.on('connect', () => {
+	console.log("[MQTT] webSocket connected.");
+	
+	mqttClient.subscribe(`${AIO_USERNAME}/feeds/${COLOR_FEED}`);
+	mqttClient.subscribe(`${AIO_USERNAME}/feeds/${BRIGHTNESS_FEED}`);
+	mqttClient.subscribe(`${AIO_USERNAME}/feeds/${TIMER_FEED}`);
+});
+
+mqttClient.on('error',(err) => {
+	console.error("[MQTT] webSocket connection error!");
+
+});
+
+mqttClient.on('message', (topic, message) => {
+	const payload= message.toString();
+	const feedKey = topic.split('/').pop();
+
+console.log(`[MQTT Stream] Active payload discovered! ${feedKey} -> "${payload}"`);
+
+if(feedKey === BRIGHTNESS_FEED){
+	const numericBrightness = parseInt(payload, 10);
+	brightnessSlider.value = numericBrightness;
+	updateBrightnessLabel(numericBrightness);
+
+if(numericBrightness === 0){
+	isPowerOn = false;
+	powerBtn.textContent = "ON";
+	powerBtn.style.backgroundColor = "#000000";
+	powerBtn.style.color = "#ffffff";
+	ambientGlow('rgba(0,0,0,0)');
+}else{
+	isPowerOn= true;
+	powerBtn.textContent = "OFF";
+	powerBtn.style.backgroundColor = "#ffffff";
+	powerBtn.style.color = "#000000";
+	if(currentActiveMode === '') {
+		ambientGlow(colorPicker.color.hexString);
+}else{
+	ambientGlow(currentActiveMode);
+		}
+	}
+}
+
+if(feedKey === COLOR_FEED) {
+	if(payload === '#BREATHE'){
+		currentActiveMode='BREATHE';
+		if(breatheBtn) {
+			breatheBtn.style.backgroundColor = "#ffffff";
+			breatheBtn.style.color = "#000000";
+		
+		}
+		resetModes();
+		if(breatheBtn) breatheBtn.style.backgroundColor = "#ffffff";
+		ambientGlow(payload);
+
+}else if(payload === '#RAINBOW') {
+	currentActiveMode='RAINBOW';
+	if(rainbowBtn) {
+		rainbowBtn.style.backgroundColor = "#ffffff";
+		rainbowBtn.style.color= "#000000";
+		}
+	resetModes();
+	if(rainbowBtn) rainbowBtn.style.backgroundColor = "#ffffff";
+	ambientGlow(payload);
+
+}else if(payload.startsWith("#")){
+	currentActiveMode='';
+	if(colorPicker) {
+		colorPicker.color.hexString = payload;
+	}
+	resetModes();
+	ambientGlow(payload);
+	}
+}
+
+if(feedKey === TIMER_FEED) {
+	if(payload && payload !=="0") {
+		const cloudTarget = parseInt(payload, 10);
+		const currentEpoch = Math.floor(Date.now()/1000);
+	
+	if(cloudTarget > currentEpoch){
+		if(targetEpochSeconds !== cloudTarget) {
+			console.log("[MQTT] Live countdown from Jade");
+			startLocalCountdown(cloudTarget);
+		}
+}else{
+	clearLocalCountdown();
+	}
+}else{
+	clearLocalCountdown();
+			}
+		}
+	});
+
+}
+
+
 
 
 
