@@ -71,10 +71,11 @@ const dynamicOpacity = (currentRawBrightness/ 255).toFixed(2);
 if(!hexColor) return;
 
 if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
-	document.documentElement.style.setProperty('--accent-glow', 'rgba(255, 0, 127, 0.5)');
+	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
+	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
 }else if(hexColor==='#RAINBOW' || hexColor==='RAINBOW') {
-	document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 255, 0, 0.5)');
-
+	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
+	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
 }else if(hexColor && hexColor.startsWith('#')){
 let fullHex= hexColor;
 if(hexColor.length === 4){
