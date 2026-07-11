@@ -59,7 +59,8 @@ brightnessPct.textContent = `${percentage}%`;
 
 function ambientGlow(hexColor){
 if(!isPowerOn){
-document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 0, 0, 0)');
+document.documentElement.style.setProperty('--accent-glow', 'linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))');
+document.documentElement.style.setProperty('--gradient-alpha', '0' );
 return;
 }
 
@@ -72,10 +73,18 @@ if(!hexColor) return;
 
 if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
 	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
-	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
+	const splitGradient = `linear-gradient(to bottom, rgba(219, 39, 119, ${modeOpacity}) 0%, rgba(16, 185, 129, ${modeOpacity}) 100%)`;
+	document.documentElement.style.setProperty('--mode-gradient', splitGradient);
+	document.documentElement.style.setProperty('--gradient-alpha', `${modeOpacity}`);
+	return;
+
+
 }else if(hexColor==='#RAINBOW' || hexColor==='RAINBOW') {
 	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
 	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
+	document.documentElement.style.setProperty('--gradient-alpha', '0');
+	return;
+
 }else if(hexColor && hexColor.startsWith('#')){
 let fullHex= hexColor;
 if(hexColor.length === 4){
@@ -86,6 +95,9 @@ const g = parseInt(fullHex.slice(3, 5), 16);
 const b = parseInt(fullHex.slice(5, 7), 16);
 
 document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`);
+document.documentElement.style.setProperty('--gradient-alpha', '0');
+
+return;
 		}
 	});
 }
