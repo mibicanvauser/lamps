@@ -1,6 +1,7 @@
 let isPowerOn = false;
 let currentActiveMode= '';
 let lastSelectedHex= '#ffffff';
+let rememberedBrightness= 255
 
 
 //Declare constants and assign function to buttons- register service worker
@@ -157,9 +158,16 @@ fetch(brightnessUrl, {
 if(data.value !== undefined){
 const currentBrightness = parseInt(data.value, 10);
 console.log(`[Sync] Found last saved brightness: ${currentBrightness}`);
-brightnessSlider.value = currentBrightness;
 
-updateBrightnessLabel(currentBrightness);
+if(currentBrightness > 0){
+	rememberedBrightness = currentBrightness;
+	brightnessSlider.value = currentBrightness;
+}else{
+rememberedBrightness = parseInt(brightnessSlider.value, 10) || 100;
+brightnessSlider.value = rememberedBrightness;
+updateBrightnessLabel(rememberedBrightness);
+}
+
 
 if(currentBrightness === 0) {
 isPowerOn = false;
@@ -272,10 +280,17 @@ powerBtn.textContent = "OFF";
 powerBtn.style.backgroundColor= "#ffffff";
 powerBtn.style.color= "#000000";
 
-//restore light
-const numericBrightness = parseInt(brightnessSlider.value, 10);
-sendToLamp(BRIGHTNESS_FEED, numericBrightness);
-ambientGlow(colorPicker.color.hexString);
+brightnessSlider.value = rememberedBrightness
+updateBrightnessLabel(rememberedBrightness);
+
+sendToLamp(BRIGHTNESS_FEED, rememberedBrightness);
+
+if(currentActiveMode != '') {
+	ambientGlow(currentActiveMode);
+
+}else{
+	ambientGlow(colorPicker.color.hexString);
+}
 
 }else{
 powerBtn.textContent = "ON";
@@ -289,16 +304,32 @@ ambientGlow('rgba(0,0,0,0)');
 
 //brightness slider
 brightnessSlider.addEventListener('input', () => {
-updateBrightnessLabel(brightnessSlider.value);
-if(currentActiveMode !==''){
+const currentVal = parseInt(brightnessSlider.value, 10) || 0;
+updateBrightnessLabel(currentVal);
+
+if(currentVal > 0) {
+
+rememberedBrightness= currentVal;
+}
+
+if(isPowerOn) {
+
+	if(currentActiveMode !==''){
 	ambientGlow(currentActiveMode);
 }else{
 	ambientGlow(colorPicker.color.hexString);
-}
+		}	
+	}
 });
 
 
 brightnessSlider.addEventListener('change', () => {
+
+const currentVal = parseInt(brightnessSlider.value, 10) || 0;
+
+if(currentVal > 0) {
+	rememberedBrightness = currentVal;
+}
 
 if(isPowerOn){
 const currentVal= parseInt(brightnessSlider.value, 10);
@@ -308,8 +339,8 @@ console.log(`[UI] Brightness slider updated to: ${currentVal}`);
 
 sendToLamp(BRIGHTNESS_FEED, currentVal);
 }else{
-console.log("[UI] Ignored slider update: Power is off");
-}
+console.log(`[UI] Stored ${currentVal} as remembered brightness.`);
+	}
 }); 
 
 //color.macro buttons and listeners for color wheel
@@ -700,8 +731,6 @@ console.log(`[MQTT Stream] Active payload discovered! ${feedKey} -> "${payload}"
 
 if(feedKey === BRIGHTNESS_FEED){
 	const numericBrightness = parseInt(payload, 10);
-	brightnessSlider.value = numericBrightness;
-	updateBrightnessLabel(numericBrightness);
 
 if(numericBrightness === 0){
 	isPowerOn = false;
@@ -714,8 +743,15 @@ if(numericBrightness === 0){
 	powerBtn.textContent = "OFF";
 	powerBtn.style.backgroundColor = "#ffffff";
 	powerBtn.style.color = "#000000";
+	brightnessSlider.value = numericBrightness;
+	rememberedBrightness = numericBrightness;
+	updateBrightnessLabel(numericBrightness);
+
+
 	if(currentActiveMode === '') {
 		ambientGlow(colorPicker.color.hexString);
+
+
 }else{
 	ambientGlow(currentActiveMode);
 		}
