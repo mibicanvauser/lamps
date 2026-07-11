@@ -1,7 +1,7 @@
 let isPowerOn = false;
 let currentActiveMode= '';
 let lastSelectedHex= '#ffffff';
-let rememberedBrightness= 255
+let rememberedBrightness= 255;
 
 
 //Declare constants and assign function to buttons- register service worker
@@ -75,6 +75,7 @@ if(!hexColor) return;
 if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
 	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
 	const splitGradient = `linear-gradient(to bottom, rgba(219, 39, 119, ${modeOpacity}) 0%, rgba(16, 185, 129, ${modeOpacity}) 100%)`;
+	document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 0, 0, 0)');
 	document.documentElement.style.setProperty('--mode-gradient', splitGradient);
 	document.documentElement.style.setProperty('--gradient-alpha', `${modeOpacity}`);
 	return;
@@ -705,7 +706,7 @@ const brokerUrl = 'wss://io.adafruit.com/mqtt';
 const options = {
 	username: AIO_USERNAME,
 	password: AIO_KEY,
-	clientId: 'lamp_ui_'+Math.random().toString(16).substr(2,8)
+	clientId: 'lamp_ui_'+Math.random().toString(16).substr(2,8),
 	protocol: 'wss',
 	rejectUnauthorized: true
 };
