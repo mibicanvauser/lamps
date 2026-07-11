@@ -701,11 +701,13 @@ if(mqttClient && mqttClient.connected) return;
 
 console.log("[MQTT] Connecting webSocket...");
 
-const brokerUrl = `wss://io.adafruit.com:443/mqtt`;
+const brokerUrl = 'wss://io.adafruit.com/mqtt';
 const options = {
 	username: AIO_USERNAME,
 	password: AIO_KEY,
 	clientId: 'lamp_ui_'+Math.random().toString(16).substr(2,8)
+	protocol: 'wss',
+	rejectUnauthorized: true
 };
 
 mqttClient = mqtt.connect(brokerUrl, options);
