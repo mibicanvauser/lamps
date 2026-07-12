@@ -47,7 +47,8 @@ const colorPicker = new iro.ColorPicker("#picker-container", {
 		handleRadius: 8
 }
 }
-]
+],
+	handleSvg: null
 });
 
 
@@ -231,7 +232,11 @@ fetch(colorUrl, {
 	
 	if(colorPicker) {
 		colorPicker.color.hexString = data.value;
+
+	if(colorPicker.color.value < 100){
+		colorPicker.color.value = 100;
 	}
+}
 		isCloudUpdate = false;
 
 ambientGlow(data.value);
@@ -363,7 +368,16 @@ document.querySelectorAll('.color-macro').forEach(button => {
 	lastSelectedHex=hexColor;
 	currentActiveMode='';
 	sendToLamp(COLOR_FEED, hexColor);
+
+
+	if(colorPicker) { 
 	colorPicker.color.hexString = hexColor;
+	
+	if(colorPicker.color.value < 100) {
+		colorPicker.color.value = 100;
+	}
+}
+
 	resetModes();
 	ambientGlow(hexColor);
 	});
@@ -804,6 +818,9 @@ if(feedKey === COLOR_FEED) {
 
 	if(colorPicker) {
 		colorPicker.color.hexString = payload;
+	if(colorPicker.color.value < 100) {
+		colorPicker.color.value = 100;
+		}
 	}
 	isCloudUpdate = false;
 	resetModes();
