@@ -2,6 +2,7 @@ let isPowerOn = false;
 let currentActiveMode= '';
 let lastSelectedHex= '#ffffff';
 let rememberedBrightness= 127;
+let isCloudUpdate= false;
 
 
 //Declare constants and assign function to buttons- register service worker
@@ -224,10 +225,15 @@ fetch(colorUrl, {
 	} else if (data.value.startsWith('#')){
 	currentActiveMode='';
 	lastSelectedHex= data.value;
+
+	isCloudUpdate = true;
+	
 	
 	if(colorPicker) {
 		colorPicker.color.hexString = data.value;
 	}
+		isCloudUpdate = false;
+
 ambientGlow(data.value);
 }
 }
@@ -445,6 +451,9 @@ rainbowBtn.style.color = "#ffffff";
 //give life to color wheel
 
 colorPicker.on('input:end', (color) => {
+
+	if(isCloudUpdate) return;	
+	
 	const selectedHex = color.hexString;
 	console.log(`[UI] Color sent: ${selectedHex}`);
 	lastSelectedHex= selectedHex;
@@ -790,9 +799,13 @@ if(feedKey === COLOR_FEED) {
 
 }else if(payload.startsWith("#")){
 	currentActiveMode='';
+
+	isCloudUpdate= true;		
+
 	if(colorPicker) {
 		colorPicker.color.hexString = payload;
 	}
+	isCloudUpdate = false;
 	resetModes();
 	ambientGlow(payload);
 	}
