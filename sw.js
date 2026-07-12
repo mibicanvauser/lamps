@@ -32,6 +32,33 @@ if(key !==CACHE_NAME) {
 );
 });
 
+self.addEventListener('push', (event) => {
+	let data = { title: 'Lamp Notification', body: 'Lamp timer has been updated!'};
+	
+	if (event.data) {
+		try {
+			data = event.data.json();
+
+		} catch (e) {
+			data.body = event.data.text();
+		}
+}
+
+	const options = {
+		body: data.body,
+		icon: './icon-192.png.png', // Uses your existing lamp PWA icon
+		badge: './icon-192.png.png'
+		vibrate: [200, 100, 200],
+		data: {
+			dateOfArrival: Date.now(),
+			primaryKey: '1'
+		}
+};
+	event.waitUntil(
+		self.registration.showNotification(data, title, options)
+	);
+});
+
 self.addEventListener('fetch', (event) => {
 if(event.request.url.startsWith(self.location.origin) || event.request.url.includes('cdn.jsdelivr.net')) {
     event.respondWith(
