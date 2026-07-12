@@ -1,7 +1,7 @@
 let isPowerOn = false;
 let currentActiveMode= '';
 let lastSelectedHex= '#ffffff';
-let rememberedBrightness= 255;
+let rememberedBrightness= 127;
 
 
 //Declare constants and assign function to buttons- register service worker
