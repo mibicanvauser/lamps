@@ -59,6 +59,7 @@ brightnessPct.textContent = `${percentage}%`;
 }
 
 function ambientGlow(hexColor){
+
 if(!isPowerOn){
 document.documentElement.style.setProperty('--accent-glow', 'linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))');
 document.documentElement.style.setProperty('--gradient-alpha', '0' );
@@ -83,6 +84,7 @@ if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
 
 }else if(hexColor==='#RAINBOW' || hexColor==='RAINBOW') {
 	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
+	document.documentElement.style.setProperty('--mode-gradient', 'initial');
 	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
 	document.documentElement.style.setProperty('--gradient-alpha', '0');
 	return;
@@ -96,6 +98,7 @@ const r = parseInt(fullHex.slice(1, 3), 16);
 const g = parseInt(fullHex.slice(3, 5), 16);
 const b = parseInt(fullHex.slice(5, 7), 16);
 
+document.documentElement.style.setProperty('--mode-gradient', 'initial');
 document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`);
 document.documentElement.style.setProperty('--gradient-alpha', '0');
 
