@@ -68,7 +68,6 @@ document.documentElement.style.setProperty('--gradient-alpha', '0' );
 return;
 }
 
-requestAnimationFrame(() => {
 
 const currentRawBrightness= parseInt(brightnessSlider.value, 10) || 0;
 const dynamicOpacity = (currentRawBrightness/ 255).toFixed(2);
@@ -106,7 +105,6 @@ document.documentElement.style.setProperty('--gradient-alpha', '0');
 
 return;
 		}
-	});
 }
 
 
