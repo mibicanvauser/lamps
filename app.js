@@ -847,6 +847,14 @@ if(feedKey === TIMER_FEED) {
 
 }
 
+if('Notification' in window && 'serviceWorker' in navigator) {
+	Notification.requestPermission().then(permission => {
+		if(permission === 'granted') {
+	console.log('[PWA] Notification permission granted.');
+		}
+	});
+}
+
 
 
 
