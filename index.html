@@ -93,6 +93,8 @@ body {
 	filter: blur(35px);
 	z-index: -1;
 	opacity: 0.85;
+	transform: translate3d(0, 0, 0) scale(0.95);
+
 	transition: background-color 0.6s ease-in-out;
 	will-change: filter, transform;
 	}
@@ -252,6 +254,7 @@ input:checked + .toggle-slider:before {
 	justify-content: center;
 	margin-top: 10px;
 	touch-action: none;
+	
 }
 
 /* Power button styles*/
@@ -333,7 +336,7 @@ Reset System
 <section class="panel-card"> <h3>Preset Colors and Modes</h3>
 <div class="button-grid">
 <button class="color-macro" data-hex="#FF0000" style="background: #FF0000;"></button>
-<button class="color-macro" data-hex="#ff4800" style="background: #ff4800;"></button>
+<button class="color-macro" data-hex="#FF4800" style="background: #ff4800;"></button>
 <button class="color-macro" data-hex="#EEFF00" style="background: #EEFF00;"></button>
 <button class="color-macro" data-hex="#00FF00" style="background: #00FF00;"></button>
 <button class="color-macro" data-hex="#0033ff" style="background: #0033ff;"></button>
