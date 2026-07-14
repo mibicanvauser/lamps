@@ -357,27 +357,42 @@ console.log(`[UI] Stored ${currentVal} as remembered brightness.`);
 }); 
 
 //color.macro buttons and listeners for color wheel
+const presetColorMap = {
+	'#RED': '#FF0000',
+	'#ORANGE': '#FF4800',
+	'#YELLOW': '#EEFF00',
+	'#GREEN': '#00FF00',
+	'#BLUE': '#0033FF',
+	'#INDIGO': '#4B0082',
+	'#PURPLE': '#800080',
+	'#PINK': '#FF007F',
+	'#WHITE': '#FFFFFF'
+};
 
 document.querySelectorAll('.color-macro').forEach(button => {
 	button.addEventListener('click', () => {
+	const textTrigger = button.getAttribute('data-hex');
 //send hex from specific hardcoded button
-	const hexColor = button.getAttribute('data-hex');
-	console.log(`[UI] Color preset: ${hexColor}`)
-	lastSelectedHex=hexColor;
+	console.log(`[UI] Preset triggered: ${textTrigger}`);
+	lastSelectedHex=textTrigger;
 	currentActiveMode='';
-	sendToLamp(COLOR_FEED, hexColor);
+	sendToLamp(COLOR_FEED, textTrigger);
+
+	const displayHex = presetColorMap[textTrigger] || '#FFFFFF';
 
 
 	if(colorPicker) { 
-	colorPicker.color.hexString = hexColor;
+	colorPicker.color.hexString = displayHex;
 	
 	if(colorPicker.color.value < 100) {
 		colorPicker.color.value = 100;
 	}
 }
+	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
+	button.classList.add('active');
 
 	resetModes();
-	ambientGlow(hexColor);
+	ambientGlow(displayHex);
 	});
 
 
@@ -403,6 +418,7 @@ currentActiveMode='BREATHE';
 sendToLamp(COLOR_FEED, "#BREATHE");
 breatheBtn.style.backgroundColor= "#ffffff";
 breatheBtn.style.color= "#000000";
+document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 ambientGlow("BREATHE");
 
 if(rainbowBtn){
@@ -430,6 +446,7 @@ console.log("[UI]: Turning RAINBOW off while active");
 console.log("[UI] Mode clicked: Rainbow Gradient");
 currentActiveMode ='RAINBOW';
 sendToLamp(COLOR_FEED, "#RAINBOW");
+document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 ambientGlow("RAINBOW");
 
 rainbowBtn.style.backgroundColor = "#ffffff";
@@ -470,6 +487,8 @@ colorPicker.on('input:end', (color) => {
 	console.log(`[UI] Color sent: ${selectedHex}`);
 	lastSelectedHex= selectedHex;
 	currentActiveMode= '';
+
+document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 	
 sendToLamp(COLOR_FEED, selectedHex);
 resetModes();
@@ -809,8 +828,36 @@ if(feedKey === COLOR_FEED) {
 	if(rainbowBtn) rainbowBtn.style.backgroundColor = "#ffffff";
 	ambientGlow(payload);
 
+
+}else if(presetColorMap[payload]) {
+	currentActiveMode='';
+	const UIHex = presetColorMap[payload];
+
+	document.querySelectorAll('.color-macro').forEach(btn => {
+		if(btn.getAttribute('data-hex') === payload) {
+			btn.classList.add('active');
+	}else{
+			btn.classList.remove('active');
+	}
+});
+
+	isCloudUpdate=true;
+	if(colorPicker){
+		colorPicker.color.hexString = UIHex;
+		if(colorPicker.color.value < 100) {
+			colorPicker.color.value = 100;
+	}
+}
+
+isCloudUpdate=false;
+	
+	resetModes();
+	ambientGlow(UIHex);
+
 }else if(payload.startsWith("#")){
 	currentActiveMode='';
+	
+	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 
 	isCloudUpdate= true;		
 
