@@ -297,6 +297,15 @@ input:checked + .toggle-slider:before {
 	transform: translateY(10px);
 }
 
+.color-macro.active {
+	transform: scale(1.1);
+	outline: 3px solid #ffffff;
+	outline-offset: 2px;
+	box-shadow: 0 0 15px rgba(255,255,255, 0.5);
+	z-index: 10;
+}
+
+
 	
 </style>
 </head>
@@ -335,15 +344,15 @@ Reset System
 
 <section class="panel-card"> <h3>Preset Colors and Modes</h3>
 <div class="button-grid">
-<button class="color-macro" data-hex="#FF0000" style="background: #FF0000;"></button>
-<button class="color-macro" data-hex="#FF4800" style="background: #ff4800;"></button>
-<button class="color-macro" data-hex="#EEFF00" style="background: #EEFF00;"></button>
-<button class="color-macro" data-hex="#00FF00" style="background: #00FF00;"></button>
-<button class="color-macro" data-hex="#0033ff" style="background: #0033ff;"></button>
-<button class="color-macro" data-hex="#4B0082" style="background: #4B0082;"></button>
-<button class="color-macro" data-hex="#800080" style="background: #800080;"></button>
-<button class="color-macro" data-hex="#FF007F" style="background: #FF007F;"></button>
-<button class="color-macro" data-hex="#FFFFFF" style="background: #FFFFFF;"></button>
+<button class="color-macro" data-hex="#RED" style="background: #FF0000;"></button>
+<button class="color-macro" data-hex="#ORANGE" style="background: #ff4800;"></button>
+<button class="color-macro" data-hex="#YELLOW" style="background: #EEFF00;"></button>
+<button class="color-macro" data-hex="#GREEN" style="background: #00FF00;"></button>
+<button class="color-macro" data-hex="#BLUE" style="background: #0033ff;"></button>
+<button class="color-macro" data-hex="#INDIGO" style="background: #4B0082;"></button>
+<button class="color-macro" data-hex="#PURPLE" style="background: #800080;"></button>
+<button class="color-macro" data-hex="#PINK" style="background: #FF007F;"></button>
+<button class="color-macro" data-hex="#WHITE" style="background: #FFFFFF;"></button>
 
 <!Buttons for lighting modes (sends a text string)>
 <button class="mode-macro" id="breathe">peak</button>
