@@ -258,12 +258,12 @@ fetch(timerUrl, {
 
 .then(data => {
 	if(data.value && data.value !=="0") {
-	const cloudTarget = parseInt(data.value, 10);
-	const currentEpoch= Math.floor(Date.now() / 1000);
+	const secondsRemainingFromCloud = parseInt(data.value, 10);	
 	
-	if(cloudTarget > currentEpoch) {
+	if(secondsRemainingFromCloud > 0) {
 	console.log(`[Sync] Active cloud timer discovered! Syncing countdown...`);
-	startLocalCountdown(cloudTarget);
+	const localVisualTarget = Math.floor(Date.now() / 100) + secondsRemainingFromCloud;
+	startLocalCountdown(localVisualTarget);
 	
 }else{
 	clearLocalCountdown();
@@ -695,13 +695,14 @@ function handleTimerComplete() {
 }
 
 
-	const currentEpochSeconds = Math.floor(Date.now()/ 1000);
 	const runtimeSeconds= selectedDurationMinutes * 60;
-	const finalTargetTime = currentEpochSeconds+runtimeSeconds;
 
-	console.log(`[Timer] Publishing target timestamp ${finalTargetTime} to feed...`);
-	sendToLamp(TIMER_FEED, finalTargetTime);
-	startLocalCountdown(finalTargetTime);
+	console.log(`[Timer] Publishing target timestamp ${runtimeSeconds} to feed...`);
+	sendToLamp(TIMER_FEED, runtimeSeconds);
+	
+	const localVisualTarget = Math.floor(Date.now() / 1000) + runtimeSeconds;
+
+	startLocalCountdown(localVisualTarget);
 });
 }
 
@@ -875,13 +876,13 @@ isCloudUpdate=false;
 
 if(feedKey === TIMER_FEED) {
 	if(payload && payload !=="0") {
-		const cloudTarget = parseInt(payload, 10);
-		const currentEpoch = Math.floor(Date.now()/1000);
+			const liveSecondsRemaining = parseInt(payload, 10);
 	
-	if(cloudTarget > currentEpoch){
-		if(targetEpochSeconds !== cloudTarget) {
-			console.log("[MQTT] Live countdown from Jade");
-			startLocalCountdown(cloudTarget);
+	if(liveSecondsRemaining > 0){
+		const localVisualTarget = Math.floor(Date.now() / 1000) + liveSecondsRemaining;
+			if(Math.abs(targetEpochSeconds - localVisualTarget) > 5) {
+			console.log("[MQTT] Live countdown from Feed");
+			startLocalCountdown(localVisualTarget);
 		}
 }else{
 	clearLocalCountdown();
