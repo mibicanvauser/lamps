@@ -63,31 +63,41 @@ brightnessPct.textContent = `${percentage}%`;
 function ambientGlow(hexColor){
 
 if(!isPowerOn){
-document.documentElement.style.setProperty('--accent-glow', 'linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))');
 document.documentElement.style.setProperty('--gradient-alpha', '0' );
+document.documentElement.style.setProperty('--before-alpha', '0');
 return;
 }
 
 
 const currentRawBrightness= parseInt(brightnessSlider.value, 10) || 0;
-const dynamicOpacity = (currentRawBrightness/ 255).toFixed(2);
+const baseOpacity = currentRawBrightness / 255;
+
+const dynamicOpacity = isPowerOn ? Math.max(0.30, baseOpacity).toFixed(2) : 0;
 
 if(!hexColor) return;
 
 if(hexColor==='#BREATHE' || hexColor==='BREATHE') {
-	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
-	const splitGradient = `linear-gradient(to bottom, rgba(219, 39, 119, ${modeOpacity}) 0%, rgba(16, 185, 129, ${modeOpacity}) 100%)`;
-	document.documentElement.style.setProperty('--accent-glow', 'rgba(0, 0, 0, 0)');
+	const splitGradient = `linear-gradient(to bottom, rgba(219, 39, 119, ${dynamicOpacity}) 0%, rgba(16, 185, 129, ${dynamicOpacity}) 100%)`;
+
 	document.documentElement.style.setProperty('--mode-gradient', splitGradient);
-	document.documentElement.style.setProperty('--gradient-alpha', `${modeOpacity}`);
+	document.documentElement.style.setProperty('--gradient-alpha', `${dynamicOpacity}`);
+	document.documentElement.style.setProperty('--before-alpha', '0');
 	return;
 
 
 }else if(hexColor==='#RAINBOW' || hexColor==='RAINBOW') {
-	const modeOpacity = Math.max(0.25, parseFloat(dynamicOpacity));
-	document.documentElement.style.setProperty('--mode-gradient', 'initial');
-	document.documentElement.style.setProperty('--accent-glow', `rgba(255, 255, 255, ${modeOpacity})`);
-	document.documentElement.style.setProperty('--gradient-alpha', '0');
+	const rainbowGradient = `linear-gradient(to bottom right,
+		rgba(255, 0, 0, ${dynamicOpacity}), 
+		rgba(255, 127, 0, ${dynamicOpacity}), 
+		rgba(255, 255, 0, ${dynamicOpacity}), 
+		rgba(0, 255, 0, ${dynamicOpacity}), 
+		rgba(0, 0, 255, ${dynamicOpacity}), 
+		rgba(139, 0, 255, ${dynamicOpacity}))`;
+
+
+	document.documentElement.style.setProperty('--mode-gradient', rainbowGradient);
+	document.documentElement.style.setProperty('--gradient-alpha', `${dynamicOpacity}`);
+	document.documentElement.style.setProperty('--before-alpha', '0');
 	return;
 
 }else if(hexColor && hexColor.startsWith('#')){
@@ -99,9 +109,16 @@ const r = parseInt(fullHex.slice(1, 3), 16);
 const g = parseInt(fullHex.slice(3, 5), 16);
 const b = parseInt(fullHex.slice(5, 7), 16);
 
-document.documentElement.style.setProperty('--mode-gradient', 'initial');
 document.documentElement.style.setProperty('--accent-glow', `rgba(${r}, ${g}, ${b}, ${dynamicOpacity})`);
+document.documentElement.style.setProperty('--before-alpha', isPowerOn ? '0.85' : '0');
 document.documentElement.style.setProperty('--gradient-alpha', '0');
+
+setTimeout(() => {
+	if (currentActiveMode === '') {
+		document.documentElement.style.setProperty('--mode-gradient', 'linear-gradient(rgba(0,0,0,0), rgba(0,0,0,0))');
+	}
+}, 500)
+
 
 return;
 		}
@@ -179,6 +196,7 @@ isPowerOn = false;
 powerBtn.textContent="ON"
 powerBtn.style.backgroundColor = "#000000";
 powerBtn.style.color = "#ffffff";
+ambientGlow('rgba(0, 0, 0, 0)');
 
 }else{
 isPowerOn = true;
@@ -204,15 +222,19 @@ fetch(colorUrl, {
 .then(data => {
 	if (data.value) {
 	console.log(`[Sync] Found last color: ${data.value}`);
+
+	const currentSliderVal = parseInt(brightnessSlider.value, 10) || 0;
+		isPowerOn = currentSliderVal > 0;
 	
 	if(data.value === '#BREATHE'){
 		currentActiveMode='BREATHE';
 	if(breatheBtn){
-		breatheBtn.style.backgroundColor = "#ffffff";
-		breatheBtn.style.color = "#000000"
+		breatheBtn.style.background= "linear-gradient(to bottom right, #00FF00 0%, #FF007F 100%)";
+		breatheBtn.style.color = "#ffffff"
 	}
 
 	ambientGlow(data.value);
+
 	}else if(data.value === '#RAINBOW'){
 	currentActiveMode ='RAINBOW';
 	if(rainbowBtn){
@@ -334,7 +356,12 @@ powerBtn.textContent = "ON";
 powerBtn.style.backgroundColor= "#000000";
 powerBtn.style.color= "#ffffff";
 sendToLamp(BRIGHTNESS_FEED, 0);
-ambientGlow('rgba(0,0,0,0)');
+
+if(currentActiveMode != '') {
+	ambientGlow(currentActiveMode);
+}else{
+	ambientGlow(colorPicker.color.hexString);
+	}
 }
 
 });
@@ -398,11 +425,12 @@ document.querySelectorAll('.color-macro').forEach(button => {
 	const textTrigger = button.getAttribute('data-hex');
 //send hex from specific hardcoded button
 	console.log(`[UI] Preset triggered: ${textTrigger}`);
-	lastSelectedHex=textTrigger;
+	const displayHex = presetColorMap[textTrigger] || '#FFFFFF';
+
+	lastSelectedHex=displayHex
 	currentActiveMode='';
 	sendToLamp(COLOR_FEED, textTrigger);
 
-	const displayHex = presetColorMap[textTrigger] || '#FFFFFF';
 
 
 	if(colorPicker) { 
@@ -432,15 +460,16 @@ if(currentActiveMode === 'BREATHE'){
 console.log("[UI]: Turning BREATHE off while active");
 	currentActiveMode='';
 	sendToLamp(COLOR_FEED, lastSelectedHex);
-	colorPicker.color.hexString= lastSelectedHex;
+	const cleanHex = presetColorMap[lastSelectedHex] || lastSelectedHex;
+	colorPicker.color.hexString = cleanHex;
 	resetModes();
-	ambientGlow(lastSelectedHex);
+	ambientGlow(cleanHex);
 }else{
 	
 console.log("[UI] Mode clicked: PEAK");
 currentActiveMode='BREATHE';
 sendToLamp(COLOR_FEED, "#BREATHE");
-breatheBtn.style.backgroundColor= "#ffffff";
+breatheBtn.style.background= "linear-gradient(to bottom right, #00FF00 0%, #FF007F 100%)";
 breatheBtn.style.color= "#000000";
 document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 ambientGlow("BREATHE");
@@ -460,7 +489,8 @@ if(currentActiveMode === 'RAINBOW'){
 console.log("[UI]: Turning RAINBOW off while active");
 	currentActiveMode='';
 	sendToLamp(COLOR_FEED, lastSelectedHex);
-	colorPicker.color.hexString= lastSelectedHex;
+	const cleanHex = presetColorMap[lastSelectedHex] || lastSelectedHex;
+	colorPicker.color.hexString = cleanHex;
 	resetModes();
 	ambientGlow(lastSelectedHex);
 
@@ -489,6 +519,7 @@ breatheBtn.style.color = "#ffffff";
 function resetModes(){
 
 if(breatheBtn){
+breatheBtn.style.background = ""; 
 breatheBtn.style.backgroundColor= "#2c2c2e";
 breatheBtn.style.color= "#ffffff";
 }
@@ -819,7 +850,12 @@ if(numericBrightness === 0){
 	powerBtn.textContent = "ON";
 	powerBtn.style.backgroundColor = "#000000";
 	powerBtn.style.color = "#ffffff";
-	ambientGlow('rgba(0,0,0,0)');
+	if(currentActiveMode !='') {
+		ambientGlow(currentActiveMode);
+}else{
+	ambientGlow(colorPicker.color.hexString);
+	}
+
 }else{
 	isPowerOn= true;
 	powerBtn.textContent = "OFF";
@@ -845,14 +881,11 @@ if(feedKey === COLOR_FEED) {
 		currentActiveMode='BREATHE';
 		resetModes();
 		if(breatheBtn) {
-			breatheBtn.style.backgroundColor = "#ffffff";
+			breatheBtn.style.background = "linear-gradient(to bottom right, #00FF00 0%, #FF007F 100%)";
 			breatheBtn.style.color = "#000000";
 		
 		}
-		resetModes();
-		if(breatheBtn) breatheBtn.style.backgroundColor = "#ffffff";
-				breatheBtn.style.color= "#000000";
-		ambientGlow(payload);
+				ambientGlow(payload);
 
 }else if(payload === '#RAINBOW') {
 	currentActiveMode='RAINBOW';
