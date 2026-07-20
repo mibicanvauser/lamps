@@ -166,10 +166,11 @@ console.log(`[Sync] Found last saved brightness: ${currentBrightness}`);
 if(currentBrightness > 0){
 	rememberedBrightness = currentBrightness;
 	brightnessSlider.value = currentBrightness;
+	updateBrightnessLabel(currentBrightness);
 }else{
-rememberedBrightness = parseInt(brightnessSlider.value, 10) || 100;
-brightnessSlider.value = rememberedBrightness;
-updateBrightnessLabel(rememberedBrightness);
+rememberedBrightness = 127;
+brightnessSlider.value = 0;
+updateBrightnessLabel(0);
 }
 
 
@@ -692,6 +693,7 @@ function handleTimerComplete() {
 }
 
 	clearLocalCountdown();
+	ambientGlow('rgba(0, 0, 0, 0)');
 	
 	isPowerOn= false;
 	if(powerBtn) {
@@ -699,9 +701,16 @@ function handleTimerComplete() {
 		powerBtn.style.backgroundColor = "#000000";
 		powerBtn.style.color = "#ffffff";
 }
-	ambientGlow('rgba(0, 0, 0, 0)');
+	if(brightnessSlider) {
+		brightnessSlider.value = 0;
+		updateBrightnessLabel(0);
+}
+
+	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
+	resetModes();
+}
 	
-	}
+	
 
 	if (timerToggleBtn) {
 	timerToggleBtn.addEventListener('click', () => {
@@ -801,6 +810,9 @@ console.log(`[MQTT Stream] Active payload discovered! ${feedKey} -> "${payload}"
 
 if(feedKey === BRIGHTNESS_FEED){
 	const numericBrightness = parseInt(payload, 10);
+	const currentSliderVal = parseInt(brightnessSlider.value, 10);
+
+if(numericBrightness === currentSliderVal) return;
 
 if(numericBrightness === 0){
 	isPowerOn = false;
