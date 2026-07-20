@@ -286,7 +286,15 @@ fetch(activeTimerUrl, {
 
 	const localVisualTarget = Math.floor(Date.now() / 1000) + secondsRemainingFromCloud;
 	startLocalCountdown(localVisualTarget);
-		}	
+
+	}else{
+		console.log("[Sync] Stale absolute timestamp detected. Flushing cloud feed...");
+		sendToLamp(BRIGHTNESS_FEED, 0);
+		clearLocalCountdown;
+
+		}
+	}else{
+		clearLocalCountdown;	
 	}
 })		
 .catch(error => console.error("[Timer Boot Sync Error]:", error));
