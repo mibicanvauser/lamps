@@ -266,41 +266,7 @@ ambientGlow(displayGlow);
 })
 .catch(error => console.error("[Sync Error]:", error))
 }
-
-const timerUrl= `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${TIMER_FEED}/data/last`;
-
-fetch(timerUrl, {
-	method: "GET",
-	headers: {"X-AIO-Key": AIO_KEY}
-})
-.then(response => {
-	if(!response.ok) throw new Error("Could not pull last timer data");
-	return response.json();
-	
-})
-
-.then(data => {
-	if(data.value && data.value !=="0") {
-	const secondsRemainingFromCloud = parseInt(data.value, 10);	
-	
-	if(secondsRemainingFromCloud > 0 && secondsRemainingFromCloud <= 86400) {
-	console.log(`[Sync] Active cloud timer discovered! Seconds remaining: ${secondsRemainingFromCloud}`);
-	const localVisualTarget = Math.floor(Date.now() / 1000) + secondsRemainingFromCloud;
-	startLocalCountdown(localVisualTarget);
-	
-}else{
-sendToLamp(TIMER_FEED, 0);
-clearLocalCountdown();
-}
-
-
-}else{
-	clearLocalCountdown();
-}
-})
-.catch(error => console.error("[Timer Sync Error]:", error));
-	
-	
+		
 	
 //Event listeners for all buttons
 powerBtn.addEventListener('click', () => {
@@ -902,8 +868,9 @@ if(feedKey === TIMER_FEED) {
 	if(payload && payload !=="0") {
 			const liveSecondsRemaining = parseInt(payload, 10);
 	
-	if(liveSecondsRemaining > 0 && liveSecondsRemaining <= 86400){
+	if(liveSecondsRemaining > 0){
 		const localVisualTarget = Math.floor(Date.now() / 1000) + liveSecondsRemaining;
+
 			if(Math.abs(targetEpochSeconds - localVisualTarget) > 5) {
 			console.log("[MQTT] Live countdown from Feed");
 			startLocalCountdown(localVisualTarget);
