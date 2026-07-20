@@ -289,8 +289,8 @@ fetch(activeTimerUrl, {
 
 	}else{
 		console.log("[Sync] Stale absolute timestamp detected. Flushing cloud feed...");
-		sendToLamp(BRIGHTNESS_FEED, 0);
-		clearLocalCountdown;
+		sendToLamp(TIMER_FEED, 0);
+		clearLocalCountdown();
 
 		}
 	}else{
