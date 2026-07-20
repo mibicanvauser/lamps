@@ -266,6 +266,31 @@ ambientGlow(displayGlow);
 })
 .catch(error => console.error("[Sync Error]:", error))
 }
+
+const activeTimerUrl = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${TIMER_FEED}/data/last`;
+
+fetch(activeTimerUrl, {
+	method: "GET",
+	headers: {"X-AIO-Key": AIO_KEY}
+})
+.then(response => {
+	if(!response.ok) throw new Error("Could not pull active timer");
+	return response.json();
+})
+.then(data => {
+	if(data.value && data.value !=="0") {
+		const secondsRemainingFromCloud = parseInt(data.value, 10);
+
+	if(secondsRemainingFromCloud > 0 && secondsRemainingFromCloud <= 86400) {
+		console.log(`[Sync] Active countdown recovered on reload: ${secondsRemainingFromCloud}s`);
+
+	const localVisualTarget = Math.floor(Date.now() / 1000) + secondsRemainingFromCloud;
+	startLocalCountdown(localVisualTarget);
+		}	
+	}
+})		
+.catch(error => console.error("[Timer Boot Sync Error]:", error));
+
 		
 	
 //Event listeners for all buttons
