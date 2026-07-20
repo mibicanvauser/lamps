@@ -92,11 +92,9 @@ body {
 	background: var(--accent-glow, rgba(44, 44, 46, 0.2));
 	filter: blur(35px);
 	z-index: -1;
-	opacity: 0.85;
-	transform: translate3d(0, 0, 0) scale(0.95);
 
-	transition: background-color 0.6s ease-in-out;
-	will-change: filter, transform;
+	opacity: var(--before-alpha, 0.85);
+	transition: background 0.7s ease-in-out, opacity 0.5s ease-in-out, filter 0.5s ease-in-out;
 	}
 
 .panel-card::after {
@@ -112,7 +110,7 @@ body {
 	z-index: -1;
 	opacity: var(--gradient-alpha, 0);
 	pointer-events: none;
-	transition: opacity 0.6s ease-in-out;
+	transition: opacity 0.5s ease-in-out;
 
 }
 
@@ -321,8 +319,8 @@ input:checked + .toggle-slider:before {
 	<h3>System Control</h3>
 	<button id ="gear-btn" style="background: none; border: none; color: #8e8e93; font-size: 1.2rem; cursor: pointer;">⚙️</button>
 	</div>
-	<div class ="control-row">
-	<span>Power</span>
+	<div class=".control row">
+	<span style="mix-blend-mode: difference; isolation: isolate; z-index: 5;">Power</span>
 	
 
 <button id="power-btn" class="power-off-style">OFF</button>
@@ -331,7 +329,7 @@ input:checked + .toggle-slider:before {
 </div>
 
 <div style="display: flex; flex-direction: column; gap: 5px; margin-top: 5px;">
-	<label for="brightness-slider">Brightness: <span id="brightness-pct">100%</span></label>
+<label for="brightness-slider" style="mix-blend-mode: difference; isolation: isolate; z-index: 5;">Brightness: <span id="brightness-pct">100%</span></label>
 <input type="range" id="brightness-slider" min="3" max="255" value="100">
 
 <button id="resetESPBtn" class="control-btn system-reset-btn">
@@ -341,9 +339,9 @@ Reset System
 </div>
 </section>
 
-<!Buttons for color presets>
+<!Buttons for color presets>	
 
-<section class="panel-card"> <h3>Preset Colors and Modes</h3>
+<section class="panel-card"> <h3>Presets</h3>
 <div class="button-grid">
 <button class="color-macro" data-hex="#RED" style="background: #FF0000;"></button>
 <button class="color-macro" data-hex="#ORANGE" style="background: #ff4800;"></button>
@@ -357,7 +355,7 @@ Reset System
 
 <!Buttons for lighting modes (sends a text string)>
 <button class="mode-macro" id="breathe">peak</button>
-<button class="mode-macro" id="rainbow">Rainbow Gradient</button>
+<button class="mode-macro" id="rainbow">Rainbow (whimsical)</button>
 
 
 </div>
@@ -374,7 +372,7 @@ Reset System
 
 <div style="display: flex; gap: 8px; width: 100%; justify-content: space-between; align-items: center; flex-wrap: nowrap;">
 
-<span style="font-size: 14px; color: #8e8e93; font-weight: 500;">Timer:</span>
+<span style="font-size: 14px; color: #ffffff; font-weight: 500; mix-blend-mode: difference;">Timer:</span>
 
 <div class="timer-segment" data-value="15" style="display: flex; align-items: center; justify-content: center; background: #2c2c2e; color: #ffffff; height: 38px; width: 44px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; transition: all 0.2s;">15</div>
 
@@ -403,7 +401,7 @@ Reset System
 <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 5px;">
 <div style="display: flex; flex-direction: column; gap: 4px;">
 <label style ="font-size: 0.9rem; color: #fff;">Username</label>
-<input type="text" id="setup-username" placeholder="(its not sigmadestroyer 5000)" style="width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; padding: 10px; color: #fff; font-size: 1rem; outline: none;">
+<input type="text" id="setup-username" placeholder="(its not sigmadestroyer5000)" style="width: 100%; background: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; padding: 10px; color: #fff; font-size: 1rem; outline: none;">
 </div>
 
 <div style="display: flex; flex-direction: column; gap: 4px;">
