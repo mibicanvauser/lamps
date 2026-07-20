@@ -229,7 +229,28 @@ fetch(colorUrl, {
 	
 	
 	if(colorPicker) {
-		colorPicker.color.hexString = data.value;
+
+		if(presetColorMap[data.value]) {
+		const mappedHex = presetColorMap[data.value]
+		colorPicker.color.hexString = mappedHex;
+
+	document.querySelectorAll('.color-macro').forEach(btn => {
+		if(btn.getAttribute('data-hex') === data.value) {
+		btn.classList.add('active');
+	}else{
+		btn.classList.remove('active');
+	}
+	});
+	}else{
+		const hexRegex = /^#[0-9A-F]{6}$/i;
+		if(hexRegex.test(data.value)) {
+			colorPicker.color.hexString = data.value;
+	}else{
+		console.log(`[Sync Warning] Suppressed invalid color string on wheel: ${data.value}`);
+		colorPicker.color.hexString = "#FFFFFF";
+	}
+	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
+	}
 
 	if(colorPicker.color.value < 100){
 		colorPicker.color.value = 100;
@@ -237,8 +258,10 @@ fetch(colorUrl, {
 }
 		isCloudUpdate = false;
 
-ambientGlow(data.value);
+const displayGlow = presetColorMap[data.value] || data.value;
+ambientGlow(displayGlow);
 }
+
 }
 })
 .catch(error => console.error("[Sync Error]:", error))
@@ -260,13 +283,14 @@ fetch(timerUrl, {
 	if(data.value && data.value !=="0") {
 	const secondsRemainingFromCloud = parseInt(data.value, 10);	
 	
-	if(secondsRemainingFromCloud > 0) {
-	console.log(`[Sync] Active cloud timer discovered! Syncing countdown...`);
-	const localVisualTarget = Math.floor(Date.now() / 100) + secondsRemainingFromCloud;
+	if(secondsRemainingFromCloud > 0 && secondsRemainingFromCloud <= 86400) {
+	console.log(`[Sync] Active cloud timer discovered! Seconds remaining: ${secondsRemainingFromCloud}`);
+	const localVisualTarget = Math.floor(Date.now() / 1000) + secondsRemainingFromCloud;
 	startLocalCountdown(localVisualTarget);
 	
 }else{
-	clearLocalCountdown();
+sendToLamp(TIMER_FEED, 0);
+clearLocalCountdown();
 }
 
 
@@ -878,7 +902,7 @@ if(feedKey === TIMER_FEED) {
 	if(payload && payload !=="0") {
 			const liveSecondsRemaining = parseInt(payload, 10);
 	
-	if(liveSecondsRemaining > 0){
+	if(liveSecondsRemaining > 0 && liveSecondsRemaining <= 86400){
 		const localVisualTarget = Math.floor(Date.now() / 1000) + liveSecondsRemaining;
 			if(Math.abs(targetEpochSeconds - localVisualTarget) > 5) {
 			console.log("[MQTT] Live countdown from Feed");
