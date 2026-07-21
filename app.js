@@ -187,8 +187,7 @@ if(currentBrightness > 0){
 	powerBtn.style.color = "#000000";
 
 }else{
-rememberedBrightness = 127;
-brightnessSlider.value = 0;
+brightnessSlider.value = 0
 updateBrightnessLabel(0);
 isPowerOn = false;
 powerBtn.textContent = "ON";
@@ -208,7 +207,7 @@ if(colorData.value) {
 		breatheBtn.style.color = "#ffffff"
 	}
 
-	ambientGlow(data.value);
+	ambientGlow(colorData.value);
 
 	}else if(colorData.value === '#RAINBOW'){
 	currentActiveMode ='RAINBOW';
@@ -216,7 +215,7 @@ if(colorData.value) {
 	rainbowBtn.style.backgroundColor= "#ffffff";
 	rainbowBtn.style.color= "#000000";
 	}
-	ambientGlow(data.value);
+	ambientGlow(colorData.value);
 	
 
 	} else if (colorData.value.startsWith('#')){
@@ -244,7 +243,7 @@ if(colorData.value) {
 		if(hexRegex.test(colorData.value)) {
 			colorPicker.color.hexString = colorData.value;
 	}else{
-		console.log(`[Sync Warning] Suppressed invalid color string on wheel: ${data.value}`);
+		console.log(`[Sync Warning] Suppressed invalid color string on wheel: ${colorData.value}`);
 		colorPicker.color.hexString = "#FFFFFF";
 	}
 	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
@@ -286,7 +285,7 @@ fetch(activeTimerUrl, {
 	startLocalCountdown(localVisualTarget);
 
 	}else{
-		console.log("[Sync] Stale absolute timestamp detected. Flushing cloud feed...");
+		console.log("[Sync] Timer expired while away...");
 		sendToLamp(TIMER_FEED, 0);
 		clearLocalCountdown();
 
@@ -694,6 +693,8 @@ selectedDurationMinutes= 15;
 function handleTimerComplete() {
 	console.log("[Timer] Synced countdown at zero. Shutting down...");
 	
+	sendToLamp(BRIGHTNESS_FEED, 0);
+
 	isPowerOn = false;
 
 	clearLocalCountdown();
@@ -713,9 +714,6 @@ function handleTimerComplete() {
 
 	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);	
 
-	if(targetEpochSeconds > 0) {
-		sendToLamp(BRIGHTNESS_FEED, 0);
-	}
 }
 
 
