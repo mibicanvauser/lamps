@@ -447,7 +447,6 @@ currentActiveMode='BREATHE';
 sendToLamp(COLOR_FEED, "#BREATHE");
 breatheBtn.style.background= "linear-gradient(to bottom right, #00FF00 0%, #FF007F 100%)";
 breatheBtn.style.color= "#000000";
-document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 ambientGlow("BREATHE");
 
 if(rainbowBtn){
@@ -476,7 +475,6 @@ console.log("[UI]: Turning RAINBOW off while active");
 console.log("[UI] Mode clicked: Rainbow Gradient");
 currentActiveMode ='RAINBOW';
 sendToLamp(COLOR_FEED, "#RAINBOW");
-document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 ambientGlow("RAINBOW");
 
 rainbowBtn.style.backgroundColor = "#ffffff";
