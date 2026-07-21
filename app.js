@@ -3,6 +3,7 @@ let currentActiveMode= '';
 let lastSelectedHex= '#ffffff';
 let rememberedBrightness= 127;
 let isCloudUpdate= false;
+let lastSelectedFeedValue = "#WHITE";
 
 
 //Declare constants and assign function to buttons- register service worker
@@ -164,69 +165,43 @@ function syncWithCloud(){
 const colorUrl = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${COLOR_FEED}/data/last`;
 const brightnessUrl = `https://io.adafruit.com/api/v2/${AIO_USERNAME}/feeds/${BRIGHTNESS_FEED}/data/last`;
 
+Promise.all([
 //request most recent data
-fetch(brightnessUrl, {
-	method: "GET",
-	headers: {"X-AIO-Key": AIO_KEY}
+fetch(brightnessUrl, {headers: {"X-AIO-Key": AIO_KEY} }).then(res => res.json()),
+fetch(colorUrl, {headers: {"X-AIO-Key": AIO_KEY} }).then(res => res.json())
+])
 
-})
-.then(response => {
-	if(!response.ok) throw new Error("Could not pull last brightness");
-	return response.json();
-})
 
-.then(data => {
-if(data.value !== undefined){
-const currentBrightness = parseInt(data.value, 10);
+.then(([brightnessData, colorData])=> {
+if(brightnessData.value !== undefined){
+const currentBrightness = parseInt(brightnessData.value, 10);
 console.log(`[Sync] Found last saved brightness: ${currentBrightness}`);
 
 if(currentBrightness > 0){
 	rememberedBrightness = currentBrightness;
 	brightnessSlider.value = currentBrightness;
 	updateBrightnessLabel(currentBrightness);
+	isPowerOn = true;
+	powerBtn.textContent = "OFF";
+	powerBtn.style.backgroundColor = "#ffffff";
+	powerBtn.style.color = "#000000";
+
 }else{
 rememberedBrightness = 127;
 brightnessSlider.value = 0;
 updateBrightnessLabel(0);
-}
-
-
-if(currentBrightness === 0) {
 isPowerOn = false;
-powerBtn.textContent="ON"
+powerBtn.textContent = "ON";
 powerBtn.style.backgroundColor = "#000000";
 powerBtn.style.color = "#ffffff";
-ambientGlow('rgba(0, 0, 0, 0)');
-
-}else{
-isPowerOn = true;
-powerBtn.textContent="OFF"
-powerBtn.style.backgroundColor= "#ffffff";
-powerBtn.style.color = "#000000";
 	}
 }
-})
-.catch(error => console.error("[Brightness Sync Error]:", error));
 
 
-//request most recent data
-fetch(colorUrl, {
-	method: "GET",
-	headers: {"X-AIO-Key": AIO_KEY}
-
-})
-.then(response => {
-	if(!response.ok) throw new Error("Could not pull last color");
-	return response.json();
-})
-.then(data => {
-	if (data.value) {
-	console.log(`[Sync] Found last color: ${data.value}`);
-
-	const currentSliderVal = parseInt(brightnessSlider.value, 10) || 0;
-		isPowerOn = currentSliderVal > 0;
+if(colorData.value) {
+	console.log(`[Sync] Found last color: ${colorData.value}`);
 	
-	if(data.value === '#BREATHE'){
+	if(colorData.value === '#BREATHE'){
 		currentActiveMode='BREATHE';
 	if(breatheBtn){
 		breatheBtn.style.background= "linear-gradient(to bottom right, #00FF00 0%, #FF007F 100%)";
@@ -235,7 +210,7 @@ fetch(colorUrl, {
 
 	ambientGlow(data.value);
 
-	}else if(data.value === '#RAINBOW'){
+	}else if(colorData.value === '#RAINBOW'){
 	currentActiveMode ='RAINBOW';
 	if(rainbowBtn){
 	rainbowBtn.style.backgroundColor= "#ffffff";
@@ -244,21 +219,21 @@ fetch(colorUrl, {
 	ambientGlow(data.value);
 	
 
-	} else if (data.value.startsWith('#')){
+	} else if (colorData.value.startsWith('#')){
 	currentActiveMode='';
-	lastSelectedHex= data.value;
+	lastSelectedHex= colorData.value;
 
 	isCloudUpdate = true;
 	
 	
 	if(colorPicker) {
 
-		if(presetColorMap[data.value]) {
-		const mappedHex = presetColorMap[data.value]
+		if(presetColorMap[colorData.value]) {
+		const mappedHex = presetColorMap[colorData.value]
 		colorPicker.color.hexString = mappedHex;
 
 	document.querySelectorAll('.color-macro').forEach(btn => {
-		if(btn.getAttribute('data-hex') === data.value) {
+		if(btn.getAttribute('data-hex') === colorData.value) {
 		btn.classList.add('active');
 	}else{
 		btn.classList.remove('active');
@@ -266,8 +241,8 @@ fetch(colorUrl, {
 	});
 	}else{
 		const hexRegex = /^#[0-9A-F]{6}$/i;
-		if(hexRegex.test(data.value)) {
-			colorPicker.color.hexString = data.value;
+		if(hexRegex.test(colorData.value)) {
+			colorPicker.color.hexString = colorData.value;
 	}else{
 		console.log(`[Sync Warning] Suppressed invalid color string on wheel: ${data.value}`);
 		colorPicker.color.hexString = "#FFFFFF";
@@ -281,7 +256,7 @@ fetch(colorUrl, {
 }
 		isCloudUpdate = false;
 
-const displayGlow = presetColorMap[data.value] || data.value;
+const displayGlow = presetColorMap[colorData.value] || colorData.value;
 ambientGlow(displayGlow);
 }
 
@@ -428,6 +403,7 @@ document.querySelectorAll('.color-macro').forEach(button => {
 	const displayHex = presetColorMap[textTrigger] || '#FFFFFF';
 
 	lastSelectedHex=displayHex
+	lastSelectedFeedValue = textTrigger;
 	currentActiveMode='';
 	sendToLamp(COLOR_FEED, textTrigger);
 
@@ -459,7 +435,7 @@ breatheBtn.addEventListener('click', () => {
 if(currentActiveMode === 'BREATHE'){
 console.log("[UI]: Turning BREATHE off while active");
 	currentActiveMode='';
-	sendToLamp(COLOR_FEED, lastSelectedHex);
+	sendToLamp(COLOR_FEED, lastSelectedFeedValue);
 	const cleanHex = presetColorMap[lastSelectedHex] || lastSelectedHex;
 	colorPicker.color.hexString = cleanHex;
 	resetModes();
@@ -488,7 +464,7 @@ rainbowBtn.addEventListener('click', () => {
 if(currentActiveMode === 'RAINBOW'){
 console.log("[UI]: Turning RAINBOW off while active");
 	currentActiveMode='';
-	sendToLamp(COLOR_FEED, lastSelectedHex);
+	sendToLamp(COLOR_FEED, lastSelectedFeedValue);
 	const cleanHex = presetColorMap[lastSelectedHex] || lastSelectedHex;
 	colorPicker.color.hexString = cleanHex;
 	resetModes();
@@ -541,6 +517,7 @@ colorPicker.on('input:end', (color) => {
 	const selectedHex = color.hexString;
 	console.log(`[UI] Color sent: ${selectedHex}`);
 	lastSelectedHex= selectedHex;
+	lastSelectedFeedValue = selectedHex;
 	currentActiveMode= '';
 
 document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
@@ -718,15 +695,11 @@ selectedDurationMinutes= 15;
 
 function handleTimerComplete() {
 	console.log("[Timer] Synced countdown at zero. Shutting down...");
-
-	if(targetEpochSeconds > 0) {
-		sendToLamp(BRIGHTNESS_FEED, 0);
-}
+	
+	isPowerOn = false;
 
 	clearLocalCountdown();
-	ambientGlow('rgba(0, 0, 0, 0)');
 	
-	isPowerOn= false;
 	if(powerBtn) {
 		powerBtn.textContent= "ON";
 		powerBtn.style.backgroundColor = "#000000";
@@ -739,7 +712,15 @@ function handleTimerComplete() {
 
 	document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
 	resetModes();
+
+	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);	
+
+	if(targetEpochSeconds > 0) {
+		sendToLamp(BRIGHTNESS_FEED, 0);
+	}
 }
+
+
 	
 	
 
@@ -843,18 +824,17 @@ if(feedKey === BRIGHTNESS_FEED){
 	const numericBrightness = parseInt(payload, 10);
 	const currentSliderVal = parseInt(brightnessSlider.value, 10);
 
-if(numericBrightness === currentSliderVal) return;
+if(numericBrightness === currentSliderVal && numericBrightness !== 0) return;
 
 if(numericBrightness === 0){
 	isPowerOn = false;
 	powerBtn.textContent = "ON";
 	powerBtn.style.backgroundColor = "#000000";
 	powerBtn.style.color = "#ffffff";
-	if(currentActiveMode !='') {
-		ambientGlow(currentActiveMode);
-}else{
-	ambientGlow(colorPicker.color.hexString);
-	}
+	brightnessSlider.value = 0;
+	updateBrightnessLabel(0);
+	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
+
 
 }else{
 	isPowerOn= true;
