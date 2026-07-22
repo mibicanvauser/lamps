@@ -221,6 +221,7 @@ if(colorData.value) {
 	} else if (colorData.value.startsWith('#')){
 	currentActiveMode='';
 	lastSelectedHex= colorData.value;
+	lastSelectedFeedValue = colorData.value;
 
 	isCloudUpdate = true;
 	
@@ -877,6 +878,9 @@ if(feedKey === COLOR_FEED) {
 }else if(presetColorMap[payload]) {
 	currentActiveMode='';
 	const UIHex = presetColorMap[payload];
+
+	lastSelectedHex = UIHex;
+	lastSelectedFeedValue = payload;
 
 	document.querySelectorAll('.color-macro').forEach(btn => {
 		if(btn.getAttribute('data-hex') === payload) {
