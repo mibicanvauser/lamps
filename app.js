@@ -397,6 +397,7 @@ const presetColorMap = {
 
 document.querySelectorAll('.color-macro').forEach(button => {
 	button.addEventListener('click', () => {
+	if (isMicActive) stopAudioProcessing();
 	const textTrigger = button.getAttribute('data-hex');
 //send hex from specific hardcoded button
 	console.log(`[UI] Preset triggered: ${textTrigger}`);
@@ -404,7 +405,8 @@ document.querySelectorAll('.color-macro').forEach(button => {
 
 	lastSelectedHex=displayHex
 	lastSelectedFeedValue = textTrigger;
-	currentActiveMode='';
+
+	currentActiveMode='PRESET';
 	sendToLamp(COLOR_FEED, textTrigger);
 
 
@@ -431,6 +433,8 @@ const rainbowBtn = document.getElementById('rainbow');
 
 if(breatheBtn) {
 breatheBtn.addEventListener('click', () => {
+
+if(isMicActive) stopAudioProcessing();
 
 if(currentActiveMode === 'BREATHE'){
 console.log("[UI]: Turning BREATHE off while active");
@@ -460,6 +464,9 @@ rainbowBtn.style.color= "#ffffff";
 
 if(rainbowBtn) {
 rainbowBtn.addEventListener('click', () => {
+
+if(isMicActive) stopAudioProcessing();
+
 if(currentActiveMode === 'RAINBOW'){
 console.log("[UI]: Turning RAINBOW off while active");
 	currentActiveMode='';
@@ -516,6 +523,7 @@ colorPicker.on('input:end', (color) => {
 	console.log(`[UI] Color sent: ${selectedHex}`);
 	lastSelectedHex= selectedHex;
 	lastSelectedFeedValue = selectedHex;
+
 	currentActiveMode= '';
 
 document.querySelectorAll('.color-macro').forEach(btn => btn.classList.remove('active'));
@@ -661,8 +669,10 @@ if(sleepTimerInterval) clearInterval(sleepTimerInterval);
 	timerToggleBtn.textContent = "STOP";
 	timerToggleBtn.style.backgroundColor = "#ff3b30";
 	timerToggleBtn.style.color = "#ffffff";
-	timerCountdownDisplay.style.display = "block";
 	
+	const countdownWrapper = document.getElementById('countdown-wrapper');
+	if (countdownWrapper) countdownWrapper.style.setProperty('display', 'flex', 'important');
+	timerCountdownDisplay.style.display = "inline";
 
 	tickSynchronizedTimer();
 	sleepTimerInterval = setInterval(tickSynchronizedTimer, 1000);
@@ -678,7 +688,10 @@ if(sleepTimerInterval) clearInterval(sleepTimerInterval);
 	timerToggleBtn.textContent= "START";
 	timerToggleBtn.style.backgroundColor= "#ffffff";
 	timerToggleBtn.style.color= "#000000";
-	timerCountdownDisplay.style.display= "none";
+
+	const countdownWrapper = document.getElementById('countdown-wrapper');
+	if (countdownWrapper) countdownWrapper.style.setProperty('display', 'none', 'important');
+	timerCountdownDisplay.style.display = "none";
 	
 	document.querySelectorAll('.timer-segment').forEach((p, idx) => {
 		p.style.background = idx ===0? "#ffffff" : "#2c2c2e";
@@ -951,6 +964,113 @@ if('Notification' in window && 'serviceWorker' in navigator) {
 		}
 	});
 }
+
+// sound mode
+
+let audioCtx = null;
+let analyser = null;
+let micStream = null;
+let micAnimationLoop = null;
+let isMicActive = false;
+let lastSentBrightness = -1;
+let lastSendTimestamp = 0;
+
+const micToggleBtn = document.getElementById('mic-toggle-btn');
+const micLevelBar = document.getElementById('mic-level-bar');
+
+async function startAudioProcessing() {
+try {
+	micStream = await navigator.mediaDevices.getUserMedia({audio: true, video: false});
+
+	audioCtx = new (window.AudioContext || window.webkitAudioContext) ();
+	analyser = audioCtx.createAnalyser();
+	analyser.fftSize = 64;
+
+	const source = audioCtx.createMediaStreamSource(micStream);
+	source.connect(analyser);
+
+	isMicActive = true;
+	micToggleBtn.textContent = "STOP MIC ";
+	micToggleBtn.style.backgroundColor = "#ff3b30";
+	micToggleBtn.style.color = "#ffffff";
+	
+	processAudioFrame();
+}catch (err) {
+	console.error("[Audio Error] Mic access denied or unsupported:", err );
+	alert("please give me access to your microphone i promise not to do anything ominous");
+	}
+}
+
+function stopAudioProcessing() {
+	isMicActive = false;
+
+	if (micAnimationLoop) cancelAnimationFrame (micAnimationLoop);
+	if (micStream) micStream.getTracks().forEach(track => track.stop());
+	if (audioCtx) audioCtx.close();
+	
+	if(micToggleBtn) {
+		micToggleBtn.textContent = "START MIC";
+		micToggleBtn.style.backgroundColor = "#ffffff";
+		micToggleBtn.style.color = "#000000";
+	}
+	if(micLevelBar) micLevelBar.style.width = "0%";
+}
+
+function processAudioFrame () {
+	if(!isMicActive) return;
+
+	const dataArray = new Uint8Array(analyser.frequencyBinCount);
+	analyser.getByteFrequencyData(dataArray);
+
+	let sum= 0;
+	for (let i = 0; i < dataArray.length; i++) {
+		sum += dataArray[i];
+	}
+	const averageVolume = sum / dataArray.length;
+
+	const volumePct = Math.round((averageVolume / 255) * 100);
+	if (micLevelBar) micLevelBar.style.width = `${volumePct}%`;
+
+	const targetBrightness = Math.max(30, Math.min(255, Math.round((averageVolume / 180)*255)));
+
+	const now = Date.now();
+	if(now - lastSendTimestamp > 120) {
+		if(Math.abs(targetBrightness - lastSentBrightness) > 8) {
+			brightnessSlider.value = targetBrightness;
+			updateBrightnessLabel(targetBrightness);
+
+			ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
+			
+			sendToLamp(BRIGHTNESS_FEED, targetBrightness);
+
+			lastSentBrightness = targetBrightness;
+			lastSendTimestamp = now;
+	}
+}
+	micAnimationLoop = requestAnimationFrame(processAudioFrame);
+}
+
+if(micToggleBtn) {
+	micToggleBtn.addEventListener ('click', () => {
+		if(!isPowerOn) {
+			alert("oh say (we can't see 💔)");
+			return;
+		}
+	if(currentActiveMode !== '') {
+		alert("sound mode only works with the color wheel!");
+		return;
+	}
+
+	if(isMicActive) {
+		stopAudioProcessing();
+	}else{
+		startAudioProcessing();
+		}
+	});
+}
+
+
+
 
 
 
