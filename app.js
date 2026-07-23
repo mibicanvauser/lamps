@@ -1097,7 +1097,7 @@ function processAudioFrame () {
 
 	const now = Date.now();
 	if(now - lastSendTimestamp > 33) {
-			sendToRelay("AUDIO_FRAME", targetBrightness);
+			sendToRelay("AUDIO_FRAME", String(targetBrightness));
 			lastSendTimestamp = now;
 	
 	}
