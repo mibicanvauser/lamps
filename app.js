@@ -1034,8 +1034,8 @@ function processAudioFrame () {
 	const targetBrightness = Math.max(30, Math.min(255, Math.round((averageVolume / 180)*255)));
 
 	const now = Date.now();
-	if(now - lastSendTimestamp > 120) {
-		if(Math.abs(targetBrightness - lastSentBrightness) > 8) {
+	if(now - lastSendTimestamp > 2500) {
+		if(Math.abs(targetBrightness - lastSentBrightness) > 10) {
 			brightnessSlider.value = targetBrightness;
 			updateBrightnessLabel(targetBrightness);
 
@@ -1068,7 +1068,6 @@ if(micToggleBtn) {
 		}
 	});
 }
-
 
 
 
