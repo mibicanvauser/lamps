@@ -9,11 +9,12 @@ wss.on('connection', (ws, req) => {
 	const clientIp = req.socket.remoteAddress;
 	console.log(`[Connected] New client joined from ${clientIp}. Total connected: ${wss.clients.size}`);
 
-ws.on('message', (message, isBinary) => {
-
+ws.on('message', (message) => {
+const messageStr = message.toString();
+	
 wss.clients.forEach((client) => {
 	if(client !== ws && client.readyState === WebSocket.OPEN) {
-		client.send(message, { binary: isBinary });
+		client.send(messageStr);
 		}
 	});
 });
