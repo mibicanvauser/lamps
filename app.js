@@ -1099,7 +1099,7 @@ function processAudioFrame () {
 	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
 
 	const now = Date.now();
-	if(now - lastSendTimestamp > 50) {
+	if(now - lastSendTimestamp > 33) {
 			sendToRelay("AUDIO_FRAME", String(targetBrightness));
 			lastSendTimestamp = now;
 	
