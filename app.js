@@ -1019,9 +1019,12 @@ function initRelayServer () {
 }
 
 function sendToRelay(type, value) {
-		if(relaySocket && relaySocket.readyState === WebSocket.OPEN) {
-			relaySocket.send(JSON.stringify({type: type, value: value}));
-	}
+  if (relaySocket && relaySocket.readyState === WebSocket.OPEN) {
+    console.log(`[Relay TX] ${type} -> ${value}`);
+    relaySocket.send(JSON.stringify({ type: type, value: String(value) }));
+  } else {
+    console.warn("[Relay TX Warning] Socket not open!");
+  }
 }
 
 initRelayServer();
@@ -1089,14 +1092,14 @@ function processAudioFrame () {
 	const volumePct = Math.round((averageVolume / 255) * 100);
 	if (micLevelBar) micLevelBar.style.width = `${volumePct}%`;
 
-	const targetBrightness = Math.max(30, Math.min(255, Math.round((averageVolume / 180)*255)));
+	const targetBrightness = Math.min(255, Math.round((averageVolume / 120) * 255));
 	
 	brightnessSlider.value = targetBrightness;
 	updateBrightnessLabel(targetBrightness);
 	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
 
 	const now = Date.now();
-	if(now - lastSendTimestamp > 33) {
+	if(now - lastSendTimestamp > 50) {
 			sendToRelay("AUDIO_FRAME", String(targetBrightness));
 			lastSendTimestamp = now;
 	
