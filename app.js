@@ -147,10 +147,10 @@ fetch(url, {
 
 .then(response => {
 if (!response.ok){
-	console.error('[Error] Failed to send to ${feedName}');
+	console.error(`[Error] Failed to send to ${feedName}`);
 	
 	}else{
-	console.log('[Success] Sent "${payload}" to ${feedName}');
+	console.log(`[Success] Sent "${payload}" to ${feedName}`);
 	}
 })
 
@@ -978,6 +978,55 @@ let lastSendTimestamp = 0;
 const micToggleBtn = document.getElementById('mic-toggle-btn');
 const micLevelBar = document.getElementById('mic-level-bar');
 
+const RELAY_URL = "wss://lamp-relay.onrender.com"
+let relaySocket = null;
+
+function initRelayServer () {
+	relaySocket = new WebSocket(RELAY_URL);
+
+	relaySocket.onopen = () => {
+		console.log("[Relay] Connected to cloud relay!");
+	};
+	
+	relaySocket.onclose = () => {
+		console.warn("[Relay] Disconnected. Retrying in 2s...");
+		setTimeout(initRelayServer, 2000);
+	};
+
+	relaySocket.onerror = (err) => {
+		console.error("[Relay error]:", err);
+	};
+	
+	relaySocket.onmessage = (event) => {
+		try {
+			const data = JSON.parse(event.data);
+			if(data.type === "MODE") {
+			if(data.value === "SOUND_START") {
+				micToggleBtn.textContent = "STOP MIC ";
+                		micToggleBtn.style.backgroundColor = "#ff3b30";
+                		micToggleBtn.style.color = "#ffffff";
+            			} else if (data.value === "SOUND_STOP") {
+                	micToggleBtn.textContent = "START MIC";
+                	micToggleBtn.style.backgroundColor = "#ffffff";
+                	micToggleBtn.style.color = "#000000";
+                	if (micLevelBar) micLevelBar.style.width = "0%";
+            }
+        }
+    } catch (e) {
+        console.error("[Relay Payload Error]:", e);
+    		}
+	};
+}
+
+function sendToRelay(type, value) {
+		if(relaySocket && relaySocket.readyState === WebSocket.OPEN) {
+			relaySocket.send(JSON.stringify({type: type, value: value}));
+	}
+}
+
+initRelayServer();
+
+
 async function startAudioProcessing() {
 try {
 	micStream = await navigator.mediaDevices.getUserMedia({audio: true, video: false});
@@ -990,6 +1039,9 @@ try {
 	source.connect(analyser);
 
 	isMicActive = true;
+
+	sendToRelay("MODE", "SOUND_START");	
+
 	micToggleBtn.textContent = "STOP MIC ";
 	micToggleBtn.style.backgroundColor = "#ff3b30";
 	micToggleBtn.style.color = "#ffffff";
@@ -1007,6 +1059,8 @@ function stopAudioProcessing() {
 	if (micAnimationLoop) cancelAnimationFrame (micAnimationLoop);
 	if (micStream) micStream.getTracks().forEach(track => track.stop());
 	if (audioCtx) audioCtx.close();
+
+	sendToRelay("MODE", "SOUND_STOP");
 	
 	if(micToggleBtn) {
 		micToggleBtn.textContent = "START MIC";
@@ -1018,6 +1072,10 @@ function stopAudioProcessing() {
 
 function processAudioFrame () {
 	if(!isMicActive) return;
+
+	if(audioCtx && audioCtx.state === 'suspended') {
+		audioCtx.resume();
+	}
 
 	const dataArray = new Uint8Array(analyser.frequencyBinCount);
 	analyser.getByteFrequencyData(dataArray);
@@ -1032,21 +1090,18 @@ function processAudioFrame () {
 	if (micLevelBar) micLevelBar.style.width = `${volumePct}%`;
 
 	const targetBrightness = Math.max(30, Math.min(255, Math.round((averageVolume / 180)*255)));
+	
+	brightnessSlider.value = targetBrightness;
+	updateBrightnessLabel(targetBrightness);
+	ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
 
 	const now = Date.now();
-	if(now - lastSendTimestamp > 2500) {
-		if(Math.abs(targetBrightness - lastSentBrightness) > 10) {
-			brightnessSlider.value = targetBrightness;
-			updateBrightnessLabel(targetBrightness);
-
-			ambientGlow(currentActiveMode !== '' ? currentActiveMode : colorPicker.color.hexString);
-			
-			sendToLamp(BRIGHTNESS_FEED, targetBrightness);
-
-			lastSentBrightness = targetBrightness;
+	if(now - lastSendTimestamp > 33) {
+			sendToRelay("AUDIO_FRAME", targetBrightness);
 			lastSendTimestamp = now;
+	
 	}
-}
+
 	micAnimationLoop = requestAnimationFrame(processAudioFrame);
 }
 
