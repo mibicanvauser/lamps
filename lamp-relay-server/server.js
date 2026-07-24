@@ -54,6 +54,11 @@ wss.on('connection', (ws, req) => {
         ws.lastSeen = Date.now();
         
         const messageStr = message.toString();
+
+        if (messageStr.includes("HEARTBEAT")) {
+            return; 
+        }
+        
         wss.clients.forEach((client) => {
             if(client !== ws && client.readyState === WebSocket.OPEN) {
                 client.send(messageStr);
