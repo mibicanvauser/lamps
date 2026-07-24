@@ -980,21 +980,37 @@ const micLevelBar = document.getElementById('mic-level-bar');
 
 const RELAY_URL = "wss://lamp-relay.onrender.com"
 let relaySocket = null;
+const relayStatusText = document.getElementById('relay-status-text');
 
 function initRelayServer () {
 	relaySocket = new WebSocket(RELAY_URL);
 
 	relaySocket.onopen = () => {
 		console.log("[Relay] Connected to cloud relay!");
+		if(relayStatusText) {
+			relayStatusText.textContent = "Connected";
+			relayStatusText.style.color = "#34c759";
+		}
 	};
 	
 	relaySocket.onclose = () => {
 		console.warn("[Relay] Disconnected. Retrying in 2s...");
+		if(relayStatusText) {
+			relayStatusText.textContent = "Disconnected (Reestablishing)...";
+			relayStatusText.style.color = "#FFFFE0";
+		}
+
 		setTimeout(initRelayServer, 2000);
 	};
 
 	relaySocket.onerror = (err) => {
 		console.error("[Relay error]:", err);
+		
+		if(relayStatusText) {
+			relayStatusText.textContent = "Error";
+			relayStatusText.style.color = "#ff3b30";
+		}
+
 	};
 	
 	relaySocket.onmessage = (event) => {
