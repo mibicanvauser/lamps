@@ -5,7 +5,6 @@ const wss = new WebSocketServer({ port: PORT});
 
 console.log(`[Relay Server] Active on port ${PORT}...`);
 
-// Helper to count only active, responsive lamps
 function broadcastLampCount() {
     let lampCount = 0;
     wss.clients.forEach((client) => {
@@ -22,37 +21,38 @@ function broadcastLampCount() {
     });
 }
 
-// Heartbeat check: Automatically detect ghost/unplugged clients every 30 seconds
-const heartbeatInterval = setInterval(() => {
+// Sweep for dead lamps every 4 seconds based on activity
+setInterval(() => {
+    const now = Date.now();
+    let changed = false;
     wss.clients.forEach((ws) => {
-        if (ws.isAlive === false) {
-            console.log('[Heartbeat] Terminating dead/unplugged connection.');
-            return ws.terminate();
+        if (ws.isLamp) {
+            // If the lamp hasn't sent a message or heartbeat in 7 seconds, terminate it!
+            if (now - ws.lastSeen > 7000) {
+                console.log('[Sweep] Lamp timed out. Terminating ghost connection.');
+                ws.terminate();
+                changed = true;
+            }
         }
-        ws.isAlive = false;
-        ws.ping();
     });
-}, 5000);
-
-wss.on('close', () => {
-    clearInterval(heartbeatInterval);
-});
+    if (changed) {
+        broadcastLampCount();
+    }
+}, 4000);
 
 wss.on('connection', (ws, req) => {
     ws.isLamp = req.url.includes('/lamp');
-    ws.isAlive = true;
-
-    // Mark client as alive when it responds to server pings
-    ws.on('pong', () => {
-        ws.isAlive = true;
-    });
+    ws.lastSeen = Date.now(); // Initialize timestamp
 
     const clientIp = req.socket.remoteAddress;
-    console.log(`[Connected] New ${ws.isLamp ? 'LAMP' : 'APP'} joined. Total connected: ${wss.clients.size}`);
+    console.log(`[Connected] New ${ws.isLamp ? 'LAMP' : 'APP'} joined.`);
     
     broadcastLampCount();
 
     ws.on('message', (message) => {
+        // Update the timestamp every single time the lamp sends anything
+        ws.lastSeen = Date.now();
+        
         const messageStr = message.toString();
         wss.clients.forEach((client) => {
             if(client !== ws && client.readyState === WebSocket.OPEN) {
@@ -62,7 +62,7 @@ wss.on('connection', (ws, req) => {
     });
 
     ws.on('close', () => {
-        console.log(`[Disconnected] Client left. Total remaining: ${wss.clients.size}`);
+        console.log(`[Disconnected] Client left.`);
         broadcastLampCount();
     });
 
