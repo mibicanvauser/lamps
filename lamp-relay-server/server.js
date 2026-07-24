@@ -9,6 +9,8 @@ wss.on('connection', (ws, req) => {
 	const clientIp = req.socket.remoteAddress;
 	console.log(`[Connected] New client joined from ${clientIp}. Total connected: ${wss.clients.size}`);
 
+	broadcastClientCount();
+
 ws.on('message', (message) => {
 const messageStr = message.toString();
 	
@@ -22,6 +24,8 @@ wss.clients.forEach((client) => {
 ws.on('close', () => {
 	console.log(`[Disconnected] Client left. Total remaining: ${wss.clients.size}`);
 });
+
+	broadcastClientCount();
 
 ws.on('error', (err) => {
 	console.error('[Socket Error]:', err.message);
