@@ -5,7 +5,7 @@ const wss = new WebSocketServer({ port: PORT});
 
 console.log(`[Relay Server] Active on port ${PORT}...`);
 
-// Only counts connections tagged as lamps
+// Helper to count only active, responsive lamps
 function broadcastLampCount() {
     let lampCount = 0;
     wss.clients.forEach((client) => {
@@ -22,9 +22,30 @@ function broadcastLampCount() {
     });
 }
 
+// Heartbeat check: Automatically detect ghost/unplugged clients every 30 seconds
+const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+        if (ws.isAlive === false) {
+            console.log('[Heartbeat] Terminating dead/unplugged connection.');
+            return ws.terminate();
+        }
+        ws.isAlive = false;
+        ws.ping();
+    });
+}, 30000);
+
+wss.on('close', () => {
+    clearInterval(heartbeatInterval);
+});
+
 wss.on('connection', (ws, req) => {
-    // Tag the connection based on the URL they used!
     ws.isLamp = req.url.includes('/lamp');
+    ws.isAlive = true;
+
+    // Mark client as alive when it responds to server pings
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
 
     const clientIp = req.socket.remoteAddress;
     console.log(`[Connected] New ${ws.isLamp ? 'LAMP' : 'APP'} joined. Total connected: ${wss.clients.size}`);
