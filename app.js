@@ -981,9 +981,10 @@ const micLevelBar = document.getElementById('mic-level-bar');
 const RELAY_URL = "wss://lamp-relay.onrender.com"
 let relaySocket = null;
 const relayStatusText = document.getElementById('relay-status-text');
+const lampStatusText = document.getElementById('lamp-status-text');
 
 function initRelayServer () {
-	relaySocket = new WebSocket(RELAY_URL);
+	relaySocket = new WebSocket(RELAY_URL + "/app");
 
 	relaySocket.onopen = () => {
 		console.log("[Relay] Connected to cloud relay!");
@@ -1016,6 +1017,22 @@ function initRelayServer () {
 	relaySocket.onmessage = (event) => {
 		try {
 			const data = JSON.parse(event.data);
+
+			if(data.type === "STATUS") {
+				if(lampStatusText) {
+				if(data.count >= 2) {
+					lampStatusText.textContent = "Both Lamps Online";
+					lampStatusText.style.color = "#34c759"; 
+					}else if (data.count === 1) {
+							lampStatusText.textContent = "1 lamp online";
+							lampStatusText.style.color = "#ffcc00"; 
+							}else{
+								lampStatusText.textContent= "Offline";
+								lampStatusText.style.color = "#ff3b30"; // Red
+		}
+	}
+}
+
 			if(data.type === "MODE") {
 			if(data.value === "SOUND_START") {
 				micToggleBtn.textContent = "STOP MIC ";
@@ -1026,8 +1043,11 @@ function initRelayServer () {
                 	micToggleBtn.style.backgroundColor = "#ffffff";
                 	micToggleBtn.style.color = "#000000";
                 	if (micLevelBar) micLevelBar.style.width = "0%";
-            }
-        }
+	
+				
+						
+     }
+}
     } catch (e) {
         console.error("[Relay Payload Error]:", e);
     		}
