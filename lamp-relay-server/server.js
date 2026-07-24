@@ -28,7 +28,7 @@ setInterval(() => {
     wss.clients.forEach((ws) => {
         if (ws.isLamp) {
             // If the lamp hasn't sent a message or heartbeat in 7 seconds, terminate it!
-            if (now - ws.lastSeen > 15000) {
+            if (now - ws.lastSeen > 7000) {
                 console.log('[Sweep] Lamp timed out. Terminating ghost connection.');
                 ws.terminate();
                 changed = true;
