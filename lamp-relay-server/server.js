@@ -28,7 +28,7 @@ setInterval(() => {
     wss.clients.forEach((ws) => {
         if (ws.isLamp) {
             // If the lamp hasn't sent a message or heartbeat in 7 seconds, terminate it!
-            if (now - ws.lastSeen > 7000) {
+            if (now - ws.lastSeen > 15000) {
                 console.log('[Sweep] Lamp timed out. Terminating ghost connection.');
                 ws.terminate();
                 changed = true;
@@ -38,7 +38,7 @@ setInterval(() => {
     if (changed) {
         broadcastLampCount();
     }
-}, 4000);
+}, 5000);
 
 wss.on('connection', (ws, req) => {
     ws.isLamp = req.url.includes('/lamp');
@@ -50,13 +50,11 @@ wss.on('connection', (ws, req) => {
     broadcastLampCount();
 
     ws.on('message', (message) => {
+        const messageStr = message.toString();
+        if (messageStr.includes("HEARTBEAT")) {
         // Update the timestamp every single time the lamp sends anything
         ws.lastSeen = Date.now();
-        
-        const messageStr = message.toString();
-
-        if (messageStr.includes("HEARTBEAT")) {
-            return; 
+        return; 
         }
         
         wss.clients.forEach((client) => {
